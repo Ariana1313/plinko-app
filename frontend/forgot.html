@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Reset Password — Plinko</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <div class="profile-circle"><img src="https://i.pravatar.cc/48" alt="avatar"></div>
+      <div class="username">Reset Password</div>
+    </div>
+    <div class="header-right">
+      <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt=""></a>
+    </div>
+  </div>
+  <div class="marquee"><marquee>Reset using email + 4-digit secret pin</marquee></div>
+
+  <div class="container">
+    <div class="card">
+      <h2>Reset password</h2>
+      <input id="email" placeholder="Email">
+      <input id="secretPin" placeholder="4-digit secret pin">
+      <input id="newPassword" type="password" placeholder="New password">
+      <button class="btn" id="resetBtn">Reset password</button>
+      <p id="msg" style="color:crimson"></p>
+    </div>
+  </div>
+
+  <div class="footer">© 2025 Neon Plinko</div>
+
+  <script src="js/header.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    document.getElementById('resetBtn').addEventListener('click', async ()=>{
+      const email = document.getElementById('email').value;
+      const pin = document.getElementById('secretPin').value;
+      const np = document.getElementById('newPassword').value;
+      try{
+        await doReset(email, pin, np);
+        alert('Password reset. Login now.');
+        location.href = 'login.html';
+      }catch(e){ document.getElementById('msg').innerText = e.message || 'Error'; }
+    });
+  </script>
+</body>
+</html>

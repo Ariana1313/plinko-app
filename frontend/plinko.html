@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Plinko Game</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <div class="profile-circle"><img id="pf" src="https://i.pravatar.cc/48" alt="pf"></div>
+      <div class="username" id="uname">Guest</div>
+    </div>
+    <div class="header-right">
+      <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt=""></a>
+    </div>
+  </div>
+  <div class="marquee"><marquee>Big bonus $4000 — drop and land center to win</marquee></div>
+
+  <div class="container">
+    <div class="card">
+      <h2>Plinko Board</h2>
+      <p>Balance: $<span id="balance">0</span></p>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn small" id="getBonus">Get +$150 Bonus</button>
+        <button class="btn small" id="dropBall">Drop Ball</button>
+        <button class="btn small" id="logout">Logout</button>
+        <div style="margin-left:auto;font-weight:900;color:var(--green)">BIG BONUS <span style="font-size:18px">$4000</span></div>
+      </div>
+
+      <div id="result" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <div class="footer">© 2025 Neon Plinko</div>
+
+  <script src="js/header.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/plinko.js"></script>
+  <script src="js/bonus.js"></script>
+  <script>
+    const user = JSON.parse(localStorage.getItem('plinkoUser') || 'null');
+    if(user){
+      document.getElementById('uname').innerText = user.username;
+      document.getElementById('pf').src = user.profileUrl || ('https://i.pravatar.cc/48?u=' + encodeURIComponent(user.username));
+      refresh();
+    }
+
+    async function refresh(){
+      try{
+        if(!user) return;
+        const r = await fetch((API || '') + '/api/user/' + user.id);
+        if(!r.ok) return;
+        const j = await r.json();
+        document.getElementById('balance').innerText = (j.balance||0).toFixed(2);
+      }catch(e){}
+    }
+
+    document.getElementById('getBonus').addEventListener('click', async ()=>{
+      if(!user){ alert('Please login to get bonus'); return; }
+      await addBonusToUser(user.id, 150);
+      await refresh();
+      alert('Added $150 bonus to your account');
+    });
+
+    document.getElementById('dropBall').addEventListener('click', async ()=>{
+      const uid = user ? user.id : null;
+      try{
+        const res = await playOnce(uid);
+        document.getElementById('result').innerHTML = `<strong>You won $${res.prize}</strong>`;
+        document.getElementById('balance').innerText = (res.balance||0).toFixed(2);
+        if(res.prize === 4000){
+          location.href = 'winner.html?userId=' + (uid || '') + '&amount=4000';
+        }
+      }catch(e){ alert(e.message || 'Play failed'); }
+    });
+
+    document.getElementById('logout').addEventListener('click', ()=>{
+      localStorage.removeItem('plinkoUser');
+      location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>
