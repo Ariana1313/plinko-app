@@ -13,15 +13,16 @@ async function registerUser(event) {
         firstName: document.getElementById("firstName").value,
         lastName: document.getElementById("lastName").value,
         username: document.getElementById("username").value,
-        pin1: document.getElementById("pin1").value,
-        pin2: document.getElementById("pin2").value,
-        pin3: document.getElementById("pin3").value,
-        pin4: document.getElementById("pin4").value,
+        email: document.getElementById("email").value,
         phone: document.getElementById("phone").value,
         sex: document.getElementById("sex").value,
         birthday: document.getElementById("birthday").value,
         address: document.getElementById("address").value,
-        email: document.getElementById("email").value
+        pin1: document.getElementById("pin1").value,
+        pin2: document.getElementById("pin2").value,
+        pin3: document.getElementById("pin3").value,
+        pin4: document.getElementById("pin4").value,
+        password: document.getElementById("password").value
     };
 
     try {
@@ -37,11 +38,11 @@ async function registerUser(event) {
             alert("Registration successful!");
             window.location.href = "login.html";
         } else {
-            alert(data.message || "Registration failed");
+            alert(data.message || "Registration failed.");
         }
 
     } catch (err) {
-        alert("Network Error — cannot reach server.");
+        alert("Network Error: Cannot reach server");
         console.log(err);
     }
 }
@@ -67,19 +68,19 @@ async function loginUser(event) {
         const data = await response.json();
 
         if (data.success) {
-            alert("Login success!");
+            alert("Login successful!");
             window.location.href = "plinko.html";
         } else {
-            alert(data.message || "Login failed");
+            alert(data.message || "Invalid credentials.");
         }
 
     } catch (err) {
-        alert("Network Error");
+        alert("Network Error: Cannot reach server");
     }
 }
 
 // -------------------------------
-// FORGOT PASSWORD
+// RESET PASSWORD
 // -------------------------------
 async function resetPassword(event) {
     event.preventDefault();
@@ -106,10 +107,10 @@ async function resetPassword(event) {
             alert("Password reset successful!");
             window.location.href = "login.html";
         } else {
-            alert(data.message || "Reset failed");
+            alert(data.message || "Reset failed.");
         }
 
     } catch (err) {
-        alert("Network Error");
+        alert("Network Error: Cannot reach server");
     }
 }
