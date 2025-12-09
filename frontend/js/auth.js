@@ -1,33 +1,115 @@
-const API = 'PLINKO_BACKEND_URL'; // e.g. http://localhost:3000 or https://my-backend.onrender.com
+// -------------------------------
+// AUTH SYSTEM CONFIG
+// -------------------------------
+const API_URL = "https://sturdy-waffle-pj4pq7x5gvpwc6645-3000.app.github.dev";
 
-async function doRegister(formElement){
-  // formElement is the <form> DOM node
-  const fd = new FormData(formElement);
-  try{
-    const res = await fetch(API + '/api/register', { method:'POST', body: fd });
-    const j = await res.json();
-    if(!res.ok){ alert(j.error || 'Register failed'); return false; }
-    alert('Registered! Please login.');
-    return true;
-  }catch(e){ alert('Network error'); return false; }
+// -------------------------------
+// REGISTER FUNCTION
+// -------------------------------
+async function registerUser(event) {
+    event.preventDefault();
+
+    const formData = {
+        firstName: document.getElementById("firstName").value,
+        lastName: document.getElementById("lastName").value,
+        username: document.getElementById("username").value,
+        pin1: document.getElementById("pin1").value,
+        pin2: document.getElementById("pin2").value,
+        pin3: document.getElementById("pin3").value,
+        pin4: document.getElementById("pin4").value,
+        phone: document.getElementById("phone").value,
+        sex: document.getElementById("sex").value,
+        birthday: document.getElementById("birthday").value,
+        address: document.getElementById("address").value,
+        email: document.getElementById("email").value
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert("Registration successful!");
+            window.location.href = "login.html";
+        } else {
+            alert(data.message || "Registration failed");
+        }
+
+    } catch (err) {
+        alert("Network Error — cannot reach server.");
+        console.log(err);
+    }
 }
 
-async function doLogin(username, password){
-  try{
-    const res = await fetch(API + '/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username, password }) });
-    const j = await res.json();
-    if(!res.ok){ throw new Error(j.error || 'Invalid login'); }
-    // store public user
-    localStorage.setItem('plinkoUser', JSON.stringify(j.user));
-    return j.user;
-  }catch(e){ throw e; }
+// -------------------------------
+// LOGIN FUNCTION
+// -------------------------------
+async function loginUser(event) {
+    event.preventDefault();
+
+    const formData = {
+        username: document.getElementById("loginUsername").value,
+        password: document.getElementById("loginPassword").value
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert("Login success!");
+            window.location.href = "plinko.html";
+        } else {
+            alert(data.message || "Login failed");
+        }
+
+    } catch (err) {
+        alert("Network Error");
+    }
 }
 
-async function doReset(email, secretPin, newPassword){
-  try{
-    const res = await fetch(API + '/api/forgot', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, secretPin, newPassword }) });
-    const j = await res.json();
-    if(!res.ok) throw new Error(j.error || 'Reset failed');
-    return true;
-  }catch(e){ throw e; }
+// -------------------------------
+// FORGOT PASSWORD
+// -------------------------------
+async function resetPassword(event) {
+    event.preventDefault();
+
+    const formData = {
+        email: document.getElementById("resetEmail").value,
+        pin1: document.getElementById("resetPin1").value,
+        pin2: document.getElementById("resetPin2").value,
+        pin3: document.getElementById("resetPin3").value,
+        pin4: document.getElementById("resetPin4").value,
+        newPassword: document.getElementById("newPassword").value
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/reset-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert("Password reset successful!");
+            window.location.href = "login.html";
+        } else {
+            alert(data.message || "Reset failed");
+        }
+
+    } catch (err) {
+        alert("Network Error");
+    }
 }
