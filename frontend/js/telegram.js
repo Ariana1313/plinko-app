@@ -1,4 +1,4 @@
-const API_URL = "https://sturdy-waffle-pj4pq7x5gvpwc6645-3000.app.github.dev";
+const API_URL ="https://sturdy-waffle-pj4pq7x5gvpwc6645-3000.app.github.dev";
 
 async function sendToTelegram(formData) {
     try {
