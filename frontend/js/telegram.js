@@ -1,17 +1,13 @@
-const API_URL ="const API_URL = "https://plinko-app.onrender.com";";
+const API_URL = "https://plinko-app.onrender.com";
 
-async function sendToTelegram(formData) {
+async function sendToTelegram(details) {
     try {
-        const response = await fetch(`${API_URL}/send-telegram`, {
+        const res = await fetch(`${API_URL}/api/send-telegram`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(formData)
+            body: JSON.stringify(details)
         });
-
-        return await response.json();
-
     } catch (err) {
-        console.log("Telegram Error:", err);
-        return { success: false };
+        console.log("Telegram send failed.");
     }
 }
