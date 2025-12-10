@@ -1,0 +1,73 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Dashboard</title><link rel="stylesheet" href="../css/style.css"></head>
+<body>
+  <div style="padding:18px;max-width:1100px;margin:72px auto;">
+    <h1>Admin Dashboard</h1>
+    <div style="display:flex;gap:12px;margin-bottom:12px">
+      <input id="search" placeholder="search user/email/phone" style="flex:1;padding:10px;border-radius:8px"/>
+      <button id="searchBtn" class="btn small">Search</button>
+      <button id="refreshBtn" class="btn small">Refresh</button>
+    </div>
+
+    <h3>Users</h3>
+    <div id="usersTable"></div>
+
+    <h3 style="margin-top:18px">Withdrawals</h3>
+    <div id="withdrawals"></div>
+
+    <h3 style="margin-top:18px">Admin Logs</h3>
+    <div id="adminLogs"></div>
+  </div>
+
+<script>
+async function loadUsers(){
+  const res = await fetch('/api/admin/users');
+  if(!res.ok){ alert('Not authorized'); return; }
+  const j = await res.json();
+  const parent = document.getElementById('usersTable'); parent.innerHTML='';
+  j.users.forEach(u=>{
+    const div = document.createElement('div');
+    div.style.border='1px solid rgba(0,0,0,0.06)'; div.style.padding='10px'; div.style.marginBottom='8px';
+    div.innerHTML = `<strong>${u.username}</strong> ($${(u.balance||0).toFixed(2)}) — ${u.email} <br>
+      <button onclick="blockUser('${u.id}', true)">Block</button>
+      <button onclick="blockUser('${u.id}', false)">Unblock</button>
+      <button onclick="viewRef('${u.id}')">View referrals</button>
+      <button onclick="exportUser('${u.id}')">Export</button>
+    `;
+    parent.appendChild(div);
+  });
+}
+
+async function blockUser(id, block){
+  const note = block ? prompt('Reason to block:') : '';
+  await fetch('/api/admin/user/'+id+'/block', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ block, reason: note })});
+  loadUsers();
+}
+
+async function loadWithdrawals(){
+  const res = await fetch('/api/admin/withdrawals');
+  const j = await res.json();
+  const p = document.getElementById('withdrawals'); p.innerHTML='';
+  j.withdrawals.forEach(w=>{
+    const d = document.createElement('div'); d.style.border='1px solid #eee'; d.style.padding='10px'; d.innerHTML = `<strong>${w.id}</strong> — ${w.userId} — $${w.amount} — ${w.status}
+      <br><button onclick="handleWithdraw('${w.id','approve')}">Approve</button> <button onclick="handleWithdraw('${w.id','decline')}">Decline</button>`;
+    p.appendChild(d);
+  });
+}
+async function handleWithdraw(id, action){
+  const note = prompt('Add admin note (optional):');
+  await fetch('/api/admin/withdraw/'+id, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action, note })});
+  loadWithdrawals();
+}
+
+document.getElementById('refreshBtn').addEventListener('click', ()=>{ loadUsers(); loadWithdrawals(); });
+document.getElementById('searchBtn').addEventListener('click', async ()=>{
+  const q = document.getElementById('search').value.trim();
+  const res = await fetch('/api/admin/search?q='+encodeURIComponent(q));
+  const j = await res.json(); const parent=document.getElementById('usersTable'); parent.innerHTML='';
+  j.users.forEach(u => { parent.appendChild(Object.assign(document.createElement('div'), { innerHTML: `<strong>${u.username}</strong> ${u.email} — $${(u.balance||0).toFixed(2)}` })); });
+});
+
+window.addEventListener('load', ()=>{ loadUsers(); loadWithdrawals(); });
+</script>
+</body></html>
