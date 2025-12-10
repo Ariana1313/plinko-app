@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Referrals — Neon Plinko</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="header">
+    <div class="header-left"><div class="profile-circle"><img src="https://i.pravatar.cc/48" alt=""></div><div class="username">You</div></div>
+    <div class="header-right"><a href="#" onclick="logout()">Logout</a></div>
+  </div>
+
+  <div class="marquee"><marquee>Your referral link — invite friends and earn $30 each!</marquee></div>
+  <div class="container">
+    <div class="form-card">
+      <h2>Your Referral</h2>
+      <p>Referral code: <strong id="code">—</strong></p>
+      <p>Referral link: <input id="refLink" style="width:100%;padding:8px;border-radius:8px" readonly></p>
+      <button class="btn" id="copyBtn">Copy Link</button>
+      <h3 style="margin-top:16px">Your Referred Users</h3>
+      <div id="referredList"></div>
+      <p class="small-note">Each successful registration with your code gives you $30 automatically.</p>
+    </div>
+  </div>
+
+  <div class="footer">© 2025 Neon Plinko</div>
+  <script src="js/header.js"></script>
+  <script src="js/referral.js"></script>
+</body>
+</html>
