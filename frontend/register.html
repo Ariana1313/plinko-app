@@ -17,6 +17,7 @@
     <div class="form-card">
       <h2>Register</h2>
       <form id="registerForm" enctype="multipart/form-data">
+        <input type="hidden" name="referralCode" id="referralCode" value="">
         <div class="field"><label class="icon">👤</label><input name="firstName" placeholder="First name" required /></div>
         <div class="field"><label class="icon">👥</label><input name="lastName" placeholder="Last name" /></div>
         <div class="field"><label class="icon">🆔</label><input name="username" placeholder="Username" required /></div>
@@ -28,6 +29,10 @@
         <div class="field"><label class="icon">🏠</label><input name="address" placeholder="Address" /></div>
         <div class="field"><label class="icon">🖼️</label><input name="profilePic" type="file" accept="image/*" /></div>
         <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
+          <div class="field">
+  <label class="icon">🔁</label>
+  <input name="referralCode" id="referralCodeVisible" placeholder="Referral code (optional)">
+</div>
           <button class="btn" type="submit">Create Account</button>
           <a class="btn small ghost" href="login.html">Already have account</a>
         </div>
