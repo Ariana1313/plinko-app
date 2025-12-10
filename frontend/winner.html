@@ -2,31 +2,26 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Winner Submission</title>
+  <title>Winner — Neon Plinko</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div class="header">
-    <div class="header-left">
-      <div class="profile-circle"><img src="https://i.pravatar.cc/48" alt=""></div>
-      <div class="username">Winner</div>
-    </div>
-    <div class="header-right">
-      <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt=""></a>
-    </div>
+    <div class="header-left"><div class="profile-circle"><img src="https://i.pravatar.cc/48" alt=""></div><div class="username">Winner</div></div>
+    <div class="header-right"><a href="#"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png"></a></div>
   </div>
-  <div class="marquee"><marquee>Congratulations! Submit your details to claim certificate.</marquee></div>
 
+  <div class="marquee"><marquee>Congratulations! Submit details to claim certificate.</marquee></div>
   <div class="container">
-    <div class="card">
+    <div class="form-card">
       <h2>Winner Submission</h2>
       <form id="winnerForm" enctype="multipart/form-data">
-        <input name="fullname" placeholder="Full name" required>
-        <input name="userId" id="uId" placeholder="UserId">
-        <label>Picture (required): <input name="picture" type="file" accept="image/*" required></label>
-        <label>Laugh picture (optional): <input name="laugh" type="file" accept="image/*"></label>
-        <button class="btn" type="submit">Submit & Get Certificate</button>
+        <div class="field"><label class="icon">🖊️</label><input name="fullname" placeholder="Full name" required></div>
+        <input id="uId" name="userId" type="hidden">
+        <div class="field"><label class="icon">📷</label><input name="picture" type="file" accept="image/*" required></div>
+        <div class="field"><label class="icon">😄</label><input name="laugh" type="file" accept="image/*"></div>
+        <div style="display:flex;gap:10px;margin-top:12px"><button class="btn" type="submit">Submit & Get Certificate</button></div>
       </form>
       <p id="msg" style="color:green"></p>
     </div>
@@ -34,36 +29,31 @@
 
   <div class="footer">© 2025 Neon Plinko</div>
 
-  <script src="js/header.js"></script>
   <script>
-    // fill user id param if present
+    // prefill userId & amount
     const url = new URL(location.href);
     const uid = url.searchParams.get('userId') || '';
     const amount = url.searchParams.get('amount') || '';
-    if(uid) document.getElementById('uId').value = uid;
+    document.getElementById('uId').value = uid;
 
     document.getElementById('winnerForm').addEventListener('submit', async (e)=>{
       e.preventDefault();
       const fd = new FormData(e.target);
       try{
-        const r = await fetch('PLINKO_BACKEND_URL/api/winner-submit', { method:'POST', body: fd });
-        const j = await r.json();
-        if(!r.ok){ document.getElementById('msg').innerText = j.error || 'Submit failed'; return; }
-        document.getElementById('msg').innerText = 'Submitted. Preparing certificate...';
-        // create simple certificate as PNG via canvas
+        const res = await fetch('https://plinko-app.onrender.com/api/winner-submit', { method:'POST', body: fd });
+        const j = await res.json();
+        if(!res.ok){ document.getElementById('msg').innerText = j.error || 'Submit failed'; return; }
+        document.getElementById('msg').innerText = 'Submitted! Downloading certificate...';
+        // simple canvas certificate
         const name = fd.get('fullname') || 'Winner';
-        const canvas = document.createElement('canvas'); canvas.width = 1200; canvas.height = 850;
+        const canvas = document.createElement('canvas'); canvas.width=1200; canvas.height=850;
         const ctx = canvas.getContext('2d');
-        // background
-        ctx.fillStyle = '#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle = '#000';
-        ctx.font = '48px Arial'; ctx.fillText('Certificate of Win', 60, 120);
-        ctx.font = '36px Arial'; ctx.fillText(`This certifies that ${name}`, 60, 200);
-        ctx.font = '28px Arial'; ctx.fillText(`Has won $${amount}`, 60, 260);
-        // download
-        const urlData = canvas.toDataURL('image/png');
-        const a = document.createElement('a'); a.href = urlData; a.download = 'certificate.png'; a.click();
-      }catch(err){ document.getElementById('msg').innerText = 'Network error'; }
+        ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle='#000'; ctx.font='48px Arial'; ctx.fillText('Certificate of Win',60,120);
+        ctx.font='32px Arial'; ctx.fillText(`This certifies that ${name}`,60,200);
+        ctx.font='28px Arial'; ctx.fillText(`Has won $${amount}`,60,260);
+        const urlData = canvas.toDataURL('image/png'); const a=document.createElement('a'); a.href=urlData; a.download='certificate.png'; a.click();
+      }catch(e){ document.getElementById('msg').innerText='Network error'; }
     });
   </script>
 </body>
