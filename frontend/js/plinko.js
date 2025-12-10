@@ -1,133 +1,60 @@
-/****************************
- *  FINAL PLINKO GAME ENGINE
- *  Connected With Backend API
- ****************************/
+// plinko.js
+const API = "https://plinko-app.onrender.com";
 
-const API_BASE_URL = "https://plinko-app.onrender.com";
+function getUser(){ return JSON.parse(localStorage.getItem('plinkoUser') || 'null'); }
 
-// Load bonus when page opens
-window.onload = async () => {
-    await checkAuth();
-    await loadUserBonus();
-};
-
-// Fetch user bonus from backend
-async function loadUserBonus() {
-    const token = getToken();
-
-    const res = await fetch(`${API_BASE_URL}/api/bonus`, {
-        headers: { "Authorization": `Bearer ${token}` }
-    });
-
-    const data = await res.json();
-    document.getElementById("bonusAmount").innerText = data.bonus || 0;
+async function refreshBalance(){
+  const u = getUser();
+  if(!u) return;
+  try{
+    const r = await fetch(`${API}/api/user/${u.id}`);
+    if(!r.ok) return;
+    const j = await r.json();
+    document.getElementById('balance') && (document.getElementById('balance').innerText = (j.balance||0).toFixed(2));
+  }catch(e){}
 }
 
-// Add or remove bonus in backend
-async function updateBonus(amount) {
-    const token = getToken();
-
-    await fetch(`${API_BASE_URL}/api/bonus/update`, {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ amount })
-    });
-
-    await loadUserBonus();
+async function addBonus(){
+  const u = getUser();
+  if(!u){ alert('Please login'); return; }
+  try{
+    const r = await fetch(`${API}/api/add-bonus`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId: u.id, amount:150 })});
+    const j = await r.json();
+    if(!r.ok){ alert(j.error || 'Add bonus failed'); return; }
+    await refreshBalance();
+    alert('+$150 added!');
+  }catch(e){ alert('Network error'); }
 }
 
-/********************************************************
- *                P L I N K O   E N G I N E
- ********************************************************/
-
-function playPlinko() {
-    const board = document.getElementById("plinkoBoard");
-    const ball = document.createElement("div");
-    ball.classList.add("ball");
-    board.appendChild(ball);
-
-    let left = 140; // start center
-    let top = 0;
-
-    const interval = setInterval(() => {
-        top += 5;
-        left += (Math.random() > 0.5 ? 7 : -7);
-
-        ball.style.top = top + "px";
-        ball.style.left = left + "px";
-
-        // When ball reaches bottom
-        if (top >= 430) {
-            clearInterval(interval);
-
-            let winAmount = calculateWin(left);
-            handleWin(winAmount);
-
-            setTimeout(() => ball.remove(), 1500);
-        }
-    }, 40);
+// simple plinko sim
+function simulateDrop(){
+  const steps = 10; let pos = 5;
+  for(let i=0;i<steps;i++) pos += (Math.random() > 0.5 ? 1 : -1);
+  pos = Math.max(0,Math.min(10,Math.floor(pos)));
+  return pos;
+}
+function prizeForBin(i){
+  if(i===5) return 4000;
+  const arr = [0,5,10,25,50,0,50,100,250,1000,0];
+  return arr[i]||0;
 }
 
-// Determine reward based on where the ball lands
-function calculateWin(position) {
-    if (position < 60) return 50;
-    if (position < 120) return 100;
-    if (position < 180) return 200;
-    if (position < 240) return 500;
-    return 1500; // big bonus zone
-}
-
-async function handleWin(amount) {
-    if (amount === 1500) {
-        // Trigger BIG BONUS
-        playBigBonus();
-        return;
+async function dropBall(){
+  const u = getUser();
+  const uid = u ? u.id : null;
+  const bin = simulateDrop();
+  const prize = prizeForBin(bin);
+  try{
+    const res = await fetch(`${API}/api/play`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId: uid, winAmount: prize, triggeredBigBonus: prize===4000 })});
+    const j = await res.json();
+    if(!res.ok){ alert(j.error || 'Play failed'); return; }
+    document.getElementById('result').innerHTML = `<strong>You won $${prize}</strong>`;
+    await refreshBalance();
+    if(prize===4000){
+      // winner flow
+      setTimeout(()=> location.href = `winner.html?userId=${uid}&amount=4000`, 900);
     }
-
-    await updateBonus(amount);
-    showPopup(`You won $${amount}!`);
+  }catch(e){ alert('Network error'); console.error(e); }
 }
 
-// BIG BONUS DROP → win $4000
-async function playBigBonus() {
-    // Disable repeating big wins forever
-    const token = getToken();
-    const res = await fetch(`${API_BASE_URL}/api/user/bigbonus`, {
-        headers: { "Authorization": `Bearer ${token}` }
-    });
-
-    const data = await res.json();
-    if (data.alreadyWon) {
-        showPopup("You already won the big bonus!");
-        return;
-    }
-
-    // Award $4000
-    await updateBonus(4000);
-
-    // Sound
-    const audio = new Audio("sounds/win.mp3");
-    audio.play();
-
-    // Popup
-    showPopup("🎉 Congratulations! You won the BIG BONUS: $4000!");
-
-    // Redirect to certificate page
-    setTimeout(() => {
-        window.location.href = "certificate.html";
-    }, 3000);
-}
-
-// Popup UI
-function showPopup(message) {
-    const popup = document.getElementById("popup");
-    popup.innerText = message;
-    popup.style.display = "block";
-
-    setTimeout(() => {
-        popup.style.display = "none";
-    }, 4000);
-          }
+window.addEventListener('load', ()=>{ refreshBalance(); document.getElementById('dropBtn')?.addEventListener('click', dropBall); document.getElementById('bonusBtn')?.addEventListener('click', addBonus); });
