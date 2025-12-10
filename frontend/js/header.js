@@ -1,15 +1,13 @@
-// header.js - run on each page (include <script src="js/header.js"></script> before </body>)
-(() => {
-  try{
-    const user = JSON.parse(localStorage.getItem('plinkoUser') || 'null');
-    const imgEl = document.querySelector('.profile-circle img');
-    const nameEl = document.querySelector('.username');
-    if(user){
-      if(imgEl) imgEl.src = user.profileUrl || ('https://i.pravatar.cc/48?u=' + encodeURIComponent(user.username));
-      if(nameEl) nameEl.textContent = user.username || user.firstName || 'Player';
-    } else {
-      if(imgEl) imgEl.src = 'https://i.pravatar.cc/48';
-      if(nameEl) nameEl.textContent = 'Guest';
-    }
-  }catch(e){ console.warn('header init error', e); }
+// header.js - populate header with local user profile
+(function(){
+  const u = JSON.parse(localStorage.getItem('plinkoUser') || 'null');
+  const img = document.querySelector('.profile-circle img');
+  const name = document.querySelector('.username');
+  if(u){
+    if(img) img.src = u.profileUrl || ('https://i.pravatar.cc/48?u=' + encodeURIComponent(u.username));
+    if(name) name.textContent = u.username || (u.firstName ? u.firstName : 'Player');
+  } else {
+    if(img) img.src = 'https://i.pravatar.cc/48';
+    if(name) name.textContent = 'Guest';
+  }
 })();
