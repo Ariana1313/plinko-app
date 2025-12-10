@@ -1,27 +1,19 @@
 // login.js
-const API_BASE_URL = "https://plinko-app.onrender.com";
+const API = "https://plinko-app.onrender.com";
 
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+async function doLogin(e){
+  e.preventDefault();
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  if(!username || !password){ alert('Enter credentials'); return; }
+  try{
+    const res = await fetch(`${API}/api/login`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username, password })});
+    const j = await res.json();
+    if(!res.ok){ alert(j.error || 'Login failed'); return; }
+    // j.user is public user object from backend
+    saveUser(j.user);
+    location.href = 'plinko.html';
+  }catch(err){ alert('Network error'); console.error(err); }
+}
 
-    const data = {
-        username: document.getElementById("username").value,
-        password: document.getElementById("password").value
-    };
-
-    const res = await fetch(`${API_BASE_URL}/api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-    });
-
-    const result = await res.json();
-
-    if (res.ok) {
-        saveToken(result.token);
-        alert("Login successful!");
-        window.location.href = "plinko.html";
-    } else {
-        alert("Login failed.");
-    }
-});
+document.getElementById && document.getElementById('loginForm')?.addEventListener('submit', doLogin);
