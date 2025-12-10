@@ -1,7 +1,7 @@
 // -------------------------------
 // AUTH SYSTEM CONFIG
 // -------------------------------
-const API_URL ="https://sturdy-waffle-pj4pq7x5gvpwc6645-3000.app.github.dev";
+const API_URL ="const API_URL = "https://plinko-app.onrender.com";";
 
 // -------------------------------
 // REGISTER FUNCTION
