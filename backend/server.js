@@ -30,8 +30,22 @@ const upload = multer({ dest: uploadDir });
 // helpers
 function readUsers(){ return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')); }
 function writeUsers(u){ fs.writeFileSync(USERS_FILE, JSON.stringify(u, null, 2)); }
-
 function makeReferralCode(){
+
+  // add after existing helpers in server.js
+const WITHDRAW_FILE = path.join(__dirname, 'withdrawals.json');
+const ADMIN_LOGS = path.join(__dirname, 'admin_logs.json');
+if(!fs.existsSync(WITHDRAW_FILE)) fs.writeFileSync(WITHDRAW_FILE, '[]', 'utf8');
+if(!fs.existsSync(ADMIN_LOGS)) fs.writeFileSync(ADMIN_LOGS, '[]', 'utf8');
+
+function readWithdrawals(){ return JSON.parse(fs.readFileSync(WITHDRAW_FILE, 'utf8')); }
+function writeWithdrawals(w){ fs.writeFileSync(WITHDRAW_FILE, JSON.stringify(w, null, 2)); }
+
+function logAdmin(action, details){
+  const logs = JSON.parse(fs.readFileSync(ADMIN_LOGS, 'utf8'));
+  logs.unshift({ at: new Date().toISOString(), action, details });
+  fs.writeFileSync(ADMIN_LOGS, JSON.stringify(logs, null, 2));
+}
   // REF- + 6 uppercase alphanum
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let s = '';
@@ -56,6 +70,7 @@ async function telegramNotify(text, photoPath){
     }
   }catch(e){ console.error('Telegram error', e.message); }
 }
+
 
 // Register (multipart) - accepts referralCode
 app.post('/api/register', upload.single('profilePic'), async (req, res) => {
