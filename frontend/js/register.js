@@ -1,32 +1,18 @@
 // register.js
-const API_BASE_URL = "https://plinko-app.onrender.com";
+const API = "https://plinko-app.onrender.com";
 
-document.getElementById("registerForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+async function doRegister(e){
+  e.preventDefault();
+  const form = document.getElementById('registerForm');
+  const fd = new FormData(form);
 
-    const data = {
-        firstName: document.getElementById("firstName").value,
-        lastName: document.getElementById("lastName").value,
-        username: document.getElementById("username").value,
-        pin: document.getElementById("pin").value,
-        phone: document.getElementById("phone").value,
-        sex: document.getElementById("sex").value,
-        birthday: document.getElementById("birthday").value,
-        address: document.getElementById("address").value,
-        email: document.getElementById("email").value,
-        password: document.getElementById("password").value
-    };
+  try{
+    const res = await fetch(`${API}/api/register`, { method:'POST', body: fd });
+    const j = await res.json();
+    if(!res.ok){ alert(j.error || 'Register failed'); return; }
+    alert('Registered! Please login.');
+    location.href = 'login.html';
+  }catch(err){ alert('Network error'); console.error(err); }
+}
 
-    const res = await fetch(`${API_BASE_URL}/api/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-    });
-
-    if (res.ok) {
-        alert("Registration successful!");
-        window.location.href = "login.html";
-    } else {
-        alert("Registration failed.");
-    }
-});
+document.getElementById && document.getElementById('registerForm')?.addEventListener('submit', doRegister);
