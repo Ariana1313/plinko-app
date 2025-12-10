@@ -1,33 +1,133 @@
-/* plinko.js - simple plinko simulation */
-/* bins 0..10 ; center bin (5) is big bonus $4000 */
-function getPrizeForBin(i){
-  if(i === 5) return 4000;
-  const prizes = [0, 5, 10, 25, 50, 0, 50, 100, 250, 1000, 0];
-  return prizes[i] || 0;
-}
-function simulateDrop(){
-  // simple triangular distribution to favour middle
-  const steps = 10;
-  let pos = 5;
-  for(let i=0;i<steps;i++){
-    pos += (Math.random() > 0.5) ? 1 : -1;
-    if(pos < 0) pos = 0;
-    if(pos > 10) pos = 10;
-  }
-  return Math.max(0, Math.min(10, Math.floor(pos)));
+/****************************
+ *  FINAL PLINKO GAME ENGINE
+ *  Connected With Backend API
+ ****************************/
+
+const API_BASE_URL = "https://plinko-app.onrender.com";
+
+// Load bonus when page opens
+window.onload = async () => {
+    await checkAuth();
+    await loadUserBonus();
+};
+
+// Fetch user bonus from backend
+async function loadUserBonus() {
+    const token = getToken();
+
+    const res = await fetch(`${API_BASE_URL}/api/bonus`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+    document.getElementById("bonusAmount").innerText = data.bonus || 0;
 }
 
-async function playOnce(userId){
-  const bin = simulateDrop();
-  const prize = getPrizeForBin(bin);
-  const triggeredBig = prize === 4000;
-  try{
-    const res = await fetch((API || '') + '/api/play', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ userId, winAmount: prize, triggeredBigBonus: triggeredBig }) });
-    if(!res.ok){
-      const j = await res.json();
-      throw new Error(j.error || 'Play failed');
-    }
-    const j = await res.json();
-    return { prize, balance: j.balance };
-  }catch(e){ throw e; }
+// Add or remove bonus in backend
+async function updateBonus(amount) {
+    const token = getToken();
+
+    await fetch(`${API_BASE_URL}/api/bonus/update`, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ amount })
+    });
+
+    await loadUserBonus();
 }
+
+/********************************************************
+ *                P L I N K O   E N G I N E
+ ********************************************************/
+
+function playPlinko() {
+    const board = document.getElementById("plinkoBoard");
+    const ball = document.createElement("div");
+    ball.classList.add("ball");
+    board.appendChild(ball);
+
+    let left = 140; // start center
+    let top = 0;
+
+    const interval = setInterval(() => {
+        top += 5;
+        left += (Math.random() > 0.5 ? 7 : -7);
+
+        ball.style.top = top + "px";
+        ball.style.left = left + "px";
+
+        // When ball reaches bottom
+        if (top >= 430) {
+            clearInterval(interval);
+
+            let winAmount = calculateWin(left);
+            handleWin(winAmount);
+
+            setTimeout(() => ball.remove(), 1500);
+        }
+    }, 40);
+}
+
+// Determine reward based on where the ball lands
+function calculateWin(position) {
+    if (position < 60) return 50;
+    if (position < 120) return 100;
+    if (position < 180) return 200;
+    if (position < 240) return 500;
+    return 1500; // big bonus zone
+}
+
+async function handleWin(amount) {
+    if (amount === 1500) {
+        // Trigger BIG BONUS
+        playBigBonus();
+        return;
+    }
+
+    await updateBonus(amount);
+    showPopup(`You won $${amount}!`);
+}
+
+// BIG BONUS DROP → win $4000
+async function playBigBonus() {
+    // Disable repeating big wins forever
+    const token = getToken();
+    const res = await fetch(`${API_BASE_URL}/api/user/bigbonus`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    const data = await res.json();
+    if (data.alreadyWon) {
+        showPopup("You already won the big bonus!");
+        return;
+    }
+
+    // Award $4000
+    await updateBonus(4000);
+
+    // Sound
+    const audio = new Audio("sounds/win.mp3");
+    audio.play();
+
+    // Popup
+    showPopup("🎉 Congratulations! You won the BIG BONUS: $4000!");
+
+    // Redirect to certificate page
+    setTimeout(() => {
+        window.location.href = "certificate.html";
+    }, 3000);
+}
+
+// Popup UI
+function showPopup(message) {
+    const popup = document.getElementById("popup");
+    popup.innerText = message;
+    popup.style.display = "block";
+
+    setTimeout(() => {
+        popup.style.display = "none";
+    }, 4000);
+          }
