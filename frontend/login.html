@@ -2,52 +2,34 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Login — Plinko</title>
+  <title>Login — Neon Plinko</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div class="header">
-    <div class="header-left">
-      <div class="profile-circle"><img src="https://i.pravatar.cc/48" alt="avatar"></div>
-      <div class="username">Guest</div>
-    </div>
-    <div class="header-right">
-      <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt=""></a>
-    </div>
+    <div class="header-left"><div class="profile-circle"><img src="https://i.pravatar.cc/48" alt=""></div><div class="username">Guest</div></div>
+    <div class="header-right"><a href="#"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png"></a></div>
   </div>
-  <div class="marquee"><marquee>Login to access your balance and big bonus</marquee></div>
 
+  <div class="marquee"><marquee>Login to access your balance and big bonus</marquee></div>
   <div class="container">
-    <div class="card">
+    <div class="form-card">
       <h2>Login</h2>
-      <input id="username" placeholder="username or email">
-      <input id="password" type="password" placeholder="password">
-      <label><input id="keep" type="checkbox"> Keep me logged in</label>
-      <button class="btn" id="loginBtn">Login</button>
-      <p style="margin-top:12px"><a href="forgot.html">Forgot password</a> • <a href="register.html">Register</a></p>
-      <p id="msg" style="color:crimson"></p>
+      <form id="loginForm">
+        <div class="field"><label class="icon">🔒</label><input id="loginUsername" placeholder="Username or Email" type="text" /></div>
+        <div class="field"><label class="icon">🔑</label><input id="loginPassword" placeholder="Password" type="password" /></div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+          <button class="btn" type="submit">Login</button>
+          <a class="btn small ghost" href="register.html">Register</a>
+          <a style="margin-left:auto" href="forgot.html">Forgot?</a>
+        </div>
+      </form>
     </div>
   </div>
 
   <div class="footer">© 2025 Neon Plinko</div>
-
   <script src="js/header.js"></script>
-  <script src="js/auth.js"></script>
-  <script>
-    document.getElementById('loginBtn').addEventListener('click', async () => {
-      const u = document.getElementById('username').value.trim();
-      const p = document.getElementById('password').value.trim();
-      if(!u || !p){ document.getElementById('msg').innerText = 'Enter username and password'; return; }
-      try{
-        const user = await doLogin(u, p);
-        // store user with profileUrl if provided
-        localStorage.setItem('plinkoUser', JSON.stringify(user));
-        location.href = 'plinko.html';
-      }catch(e){
-        document.getElementById('msg').innerText = e.message || 'Login failed';
-      }
-    });
-  </script>
+  <script src="js/login.js"></script>
 </body>
 </html>
