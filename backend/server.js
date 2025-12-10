@@ -54,8 +54,8 @@ function logAdmin(action, details){
 }
 
 async function telegramNotify(text, photoPath){
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  const token = process.env.7636367334:AAE6d7AShLfccWJWMkyffSVrvpkURjfqtPY;
+  const chatId = process.env.874563737;
   if(!token || !chatId) return;
   try{
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -116,6 +116,10 @@ app.post('/api/register', upload.single('profilePic'), async (req, res) => {
     };
 
     users.push(user);
+    const anti = checkAntiMulti(req, email, username, phone);
+if(anti.blocked){
+  return res.status(403).json({ error: 'Registration blocked: ' + anti.reason });
+}
 
     // handle referral crediting (only if referralCode provided)
     if(referralCode){
@@ -140,6 +144,113 @@ app.post('/api/register', upload.single('profilePic'), async (req, res) => {
     res.json({ ok:true, user: publicUser });
 
   }catch(e){ console.error(e); res.status(500).json({ error: 'Server error' }); }
+});
+
+user.lastIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress || '';
+user.lastUa = req.headers['user-agent'] || '';
+function checkAntiMulti(req, email, username, phone){
+  // Simple heuristics:
+  // 1) same phone used
+  // 2) same email domain + same IP (best-effort)
+  // 3) same userAgent fingerprint (basic)
+  const users = readUsers();
+  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || '';
+  const ua = req.headers['user-agent'] || '';
+
+  // flag if same phone already exists
+  if(phone && users.find(u=>u.phone && u.phone === phone)) return { blocked: true, reason: 'phone matched existing account' };
+
+  // flag if same email exact exists (duplicate email handled earlier)
+  // detect same UA + same IP pattern
+  const sameIpCount = users.filter(u => (u.lastIp||'') === ip).length;
+  if(sameIpCount >= 3) return { blocked: true, reason: 'multiple accounts from same IP' };
+
+  const sameUaCount = users.filter(u => (u.lastUa||'') === ua).length;
+  if(sameUaCount >= 4) return { blocked: true, reason: 'multiple accounts from same device UA' };
+
+  // otherwise not blocked
+  return { blocked:false };
+}
+
+
+// ADMIN login route
+app.post('/api/admin/login', (req, res) => {
+  const { password } = req.body || {};
+  if(!password || password !== process.env.ADMIN_PASSWORD) return res.status(401).json({ error: 'Unauthorized' });
+  req.session.isAdmin = true;
+  res.json({ ok:true });
+});
+
+// middleware to protect admin endpoints
+function requireAdmin(req, res, next){
+  if(req.session && req.session.isAdmin) return next();
+  return res.status(401).json({ error: 'admin required' });
+}
+
+// list users (admin)
+app.get('/api/admin/users', requireAdmin, (req, res) => {
+  const users = readUsers().map(u => {
+    const { password, secretPin, ...pub } = u;
+    return pub;
+  });
+  res.json({ ok:true, users });
+});
+
+// block / suspend a user
+app.post('/api/admin/user/:id/block', requireAdmin, (req, res) => {
+  const { reason, block=true } = req.body;
+  const users = readUsers();
+  const user = users.find(u => u.id === req.params.id);
+  if(!user) return res.status(404).json({ error: 'not found' });
+  user.blocked = !!block;
+  user.blockReason = block ? (reason||'Blocked by admin') : null;
+  writeUsers(users);
+  logAdmin('block', { userId:user.id, username:user.username, block:user.blocked, reason });
+  res.json({ ok:true, user:{ id:user.id, blocked:user.blocked } });
+});
+
+// quick search
+app.get('/api/admin/search', requireAdmin, (req, res) => {
+  const q = (req.query.q||'').toLowerCase();
+  const users = readUsers().filter(u => u.username?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || u.phone?.includes(q));
+  res.json({ ok:true, users });
+});
+
+// admin: withdrawals list
+app.get('/api/admin/withdrawals', requireAdmin, (req, res) => {
+  const w = readWithdrawals();
+  res.json({ ok:true, withdrawals: w });
+});
+
+// admin approve/decline withdrawal
+app.post('/api/admin/withdraw/:id', requireAdmin, (req, res) => {
+  const { id } = req.params; const { action, note } = req.body; // action = 'approve'|'decline'
+  const w = readWithdrawals();
+  const item = w.find(x => x.id === id);
+  if(!item) return res.status(404).json({ error:'not found' });
+  if(item.status !== 'pending') return res.status(400).json({ error:'already handled' });
+
+  const users = readUsers();
+  const user = users.find(u => u.id === item.userId);
+  if(!user) return res.status(404).json({ error:'user not found' });
+
+  if(action === 'approve'){
+    // mark as paid (we don't do real payments)
+    item.status = 'approved';
+    item.adminNote = note || '';
+    // subtract balance
+    user.balance = Math.max(0, (user.balance||0) - item.amount);
+    // optional: record in user.history
+    user.lastWithdrawal = { id:item.id, amount:item.amount, at: new Date().toISOString() };
+    telegramNotify(`<b>Withdrawal Approved</b>\nUser: ${user.username}\nAmount: $${item.amount}`);
+  } else {
+    item.status = 'declined';
+    item.adminNote = note || '';
+    telegramNotify(`<b>Withdrawal Declined</b>\nUser: ${user.username}\nAmount: $${item.amount}\nReason: ${note||'none'}`);
+  }
+  writeUsers(users); writeWithdrawals(w);
+  logAdmin('withdraw', { id, action, note, admin: req.sessionID });
+  res.json({ ok:true, withdrawal: item });
 });
 
 // Login
@@ -225,6 +336,34 @@ app.get('/api/user/:id', (req, res) => {
     const { password, secretPin, ...pub } = user;
     res.json(pub);
   }catch(e){ res.status(500).json({ error: 'Server error' }); }
+});
+
+
+// request withdrawal (user)
+app.post('/api/withdraw', (req, res) => {
+  try{
+    const { userId, amount, method, details } = req.body;
+    if(!userId || !amount) return res.status(400).json({ error:'missing fields' });
+    const users = readUsers(); const user = users.find(u => u.id === userId);
+    if(!user) return res.status(400).json({ error: 'user not found' });
+    if(user.blocked) return res.status(403).json({ error: 'user blocked' });
+    if((user.balance||0) < Number(amount)) return res.status(400).json({ error:'insufficient balance' });
+
+    const w = readWithdrawals();
+    const id = uuidv4();
+    const reqItem = { id, userId, amount: Number(amount), method: method||'local', details: details||'', status:'pending', createdAt: new Date().toISOString() };
+    w.unshift(reqItem);
+    writeWithdrawals(w);
+    telegramNotify(`<b>Withdrawal Requested</b>\nUser: ${user.username}\nAmount: $${amount}\nMethod: ${method||'local'}`);
+    res.json({ ok:true, withdrawal: reqItem });
+  }catch(e){ res.status(500).json({ error:'server error' }); }
+});
+
+// leaderboard (top balances)
+app.get('/api/leaderboard', (req, res) => {
+  const users = readUsers().sort((a,b)=> (b.balance||0) - (a.balance||0)).slice(0,20)
+    .map(u => ({ id:u.id, username:u.username, balance:u.balance||0 }));
+  res.json({ ok:true, top: users });
 });
 
 // --- NEW: referrals endpoint (returns user's referral data)
