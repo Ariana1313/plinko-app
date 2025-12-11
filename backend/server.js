@@ -80,30 +80,23 @@ app.use(helmet({
   }
 }));
 
-// FIXED Strict CORS: allow frontend, localhost, mobile, and undefined origin
+// CORS: allow frontend from Vercel + allow backend to talk to itself
 const allowedOrigins = [
-  FRONTEND_ORIGIN,
-  FRONTEND_ORIGIN.replace(/\/$/, ""),  // fix trailing slash variations
-  'http://localhost:3000',
-  'http://localhost:5500',
-  'capacitor://localhost',
-  'ionic://localhost'
+  'https://plinko-app-nu.vercel.app',   // YOUR FRONTEND
+  'https://plinko-app.onrender.com',    // BACKEND (self)
+  'http://localhost:3000',              // local testing
+  'http://localhost:5173'               // local Vite dev server (if used)
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow non-browser clients
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    return callback(new Error('CORS not allowed: ' + origin));
+    if (!origin) return callback(null, true); // allow mobile apps, curl, Postman
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS: ' + origin));
   },
   credentials: true,
-  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization']
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 // Rate limiter for /api routes
