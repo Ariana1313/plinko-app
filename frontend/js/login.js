@@ -1,5 +1,4 @@
 // login.js
-const API = "https://plinko-app.onrender.com";
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
