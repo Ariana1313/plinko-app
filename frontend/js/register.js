@@ -1,28 +1,57 @@
-const API = "https://plinko-app-1qv9.onrender.com";
+// frontend/js/register.js
+// Registers the user, saves returned user to localStorage, redirects to plinko.html
 
-document.getElementById("registerForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+const API = "https://plinko-app.onrender.com";
 
-  const form = document.getElementById("registerForm");
-  const formData = new FormData(form);
+// Minimal robust localStorage helpers (safe if auth.js exists too)
+function saveUser(user){
+  try { localStorage.setItem('plinkoUser', JSON.stringify(user)); }
+  catch(e){ console.warn('saveUser failed', e); }
+}
 
-  try {
-    const res = await fetch(`${API}/api/register`, {
-      method: "POST",
-      body: formData
-    });
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('registerForm');
+  if(!form){
+    console.error('registerForm not found');
+    return;
+  }
 
-    const data = await res.json();
+  // If a referral code exists in URL, fill hidden or visible input if present
+  const urlParams = new URLSearchParams(window.location.search);
+  const ref = urlParams.get('ref');
+  const hiddenRef = document.querySelector('input[name="referralCode"]');
+  const visibleRef = document.getElementById('referralCodeVisible');
+  if(ref && hiddenRef) hiddenRef.value = ref;
+  if(ref && visibleRef) visibleRef.value = ref;
 
-    if (!res.ok || !data.ok) {
-      alert(data.error || "Registration failed");
-      return;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+
+    // If there is a visible referral field, copy it into the formData name "referralCode"
+    if(visibleRef){
+      formData.set('referralCode', visibleRef.value || '');
     }
 
-    alert("Account created! $150 Bonus added.");
+    try {
+      const res = await fetch(`${API}/api/register`, { method: 'POST', body: formData });
+      const data = await res.json();
 
-    window.location.href = "login.html";
-  } catch (err) {
-    alert("Network error");
-  }
+      if(!res.ok || !data.ok){
+        alert(data.error || 'Registration failed. Please check details.');
+        console.error('register error', data);
+        return;
+      }
+
+      // Save user locally (server returns public user object)
+      saveUser(data.user);
+
+      alert('Registration successful — $150 bonus credited!');
+      // Redirect to plinko page
+      window.location.href = 'plinko.html';
+    } catch (err) {
+      console.error('Network/register error', err);
+      alert('Network error — please try again.');
+    }
+  });
 });
