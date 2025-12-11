@@ -1,44 +1,42 @@
-// frontend/js/register.js
+// register.js
 const API = "https://plinko-app.onrender.com";
 
-// detect referral in URL and prefill
-(function(){
-  try{
-    const url = new URL(window.location.href);
-    const ref = url.searchParams.get('ref');
-    if(ref){
-      // fill hidden input
-      const hid = document.getElementById('referralCode');
-      if(hid) hid.value = ref;
-      const vis = document.getElementById('referralCodeVisible');
-      if(vis) vis.value = ref;
-    }
-  }catch(e){}
-})();
-
-async function doRegister(e){
-  e.preventDefault();
-  const form = document.getElementById('registerForm');
-  const fd = new FormData(form);
-
-  // if user typed a visible referral, prefer it
-  const vis = document.getElementById('referralCodeVisible');
-  if(vis && vis.value.trim()){
-    fd.set('referralCode', vis.value.trim());
-  }
-
-  try{
-    const res = await fetch(`${API}/api/register`, { method:'POST', body: fd });
-    const j = await res.json();
-    if(!res.ok){ alert(j.error || 'Register failed'); return; }
-    // optionally inform user who referred them
-    if(j.user && j.user.referredBy) {
-      alert('Registered! Referred by: ' + j.user.referredBy);
-    } else {
-      alert('Registered! Please login.');
-    }
-    window.location.href = 'login.html';
-  }catch(err){ alert('Network error'); console.error(err); }
+// auto-fill referral code from URL
+const urlParams = new URLSearchParams(window.location.search);
+const ref = urlParams.get("ref");
+if (ref) {
+  document.getElementById("referralCode").value = ref;
+  document.getElementById("referralCodeVisible").value = ref;
 }
 
-document.getElementById && document.getElementById('registerForm')?.addEventListener('submit', doRegister);
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const form = document.getElementById("registerForm");
+  const formData = new FormData(form);
+
+  // Copy visible referral into the hidden one
+  const visibleRef = document.getElementById("referralCodeVisible").value;
+  formData.set("referralCode", visibleRef);
+
+  try {
+    const res = await fetch(`${API}/api/register`, {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (!data.ok) {
+      alert(data.error || "Registration failed.");
+      return;
+    }
+
+    alert("Account created successfully!");
+    window.location.href = "login.html";
+
+  } catch (err) {
+    console.error(err);
+    alert("Network error — please try again.");
+  }
+});
