@@ -1,50 +1,29 @@
-// register.js
-const API = "https://plinko-app.onrender.com"; // your backend
+// frontend/js/register.js
 
-// auto-fill referral code from URL
-const urlParams = new URLSearchParams(window.location.search);
-const ref = urlParams.get("ref");
-if (ref) {
-  document.getElementById("referralCode").value = ref;
-  document.getElementById("referralCodeVisible").value = ref;
-}
+const API_BASE = "https://plinko-app.onrender.com";
 
-document.getElementById("registerForm").addEventListener("submit", async (e) => {
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-
-  const form = document.getElementById("registerForm");
-  const formData = new FormData(form);
-
-  // Copy visible referral into the hidden one
-  const visibleRef = document.getElementById("referralCodeVisible").value;
-  formData.set("referralCode", visibleRef);
+  
+  const formData = new FormData(e.target);
 
   try {
-    const res = await fetch(`${API}/api/register`, {
-      method: "POST",
+    const res = await fetch(`${API_BASE}/api/register`, {
+      method: 'POST',
       body: formData
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      try { const j = JSON.parse(text); alert(j.error || j.message || 'Registration failed'); }
-      catch(e){ alert('Registration failed'); }
-      return;
-    }
+    const j = await res.json();
+    if (!j.ok) return alert(j.error || "Registration failed");
 
-    const data = await res.json();
-    if (!data.ok) {
-      alert(data.error || "Registration failed.");
-      return;
-    }
+    // SAVE USER TO LOCAL STORAGE
+    localStorage.setItem("plinkoUser", JSON.stringify(j.user));
 
-    // save user to localStorage (public fields)
-    localStorage.setItem('plinkoUser', JSON.stringify(data.user));
-    alert("Account created successfully! $150 bonus added.");
-    window.location.href = "plinko.html";
-
+    alert("Registration successful! $150 bonus added.");
+    location.href = "plinko.html";
+    
   } catch (err) {
-    console.error(err);
-    alert("Network error — please try again.");
+    alert("Network error.");
+    console.log(err);
   }
 });
