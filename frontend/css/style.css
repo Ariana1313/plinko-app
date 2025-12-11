@@ -97,3 +97,85 @@ body{font-family:Inter,system-ui,Arial; background:var(--bg); color:var(--text);
 .neon-page .field { background:#111 !important; border:1px solid #0af3; }
 .neon-page input { color:white !important; }
 .neon-page input::placeholder { color:#aaa; }
+
+/* ---------- Fix: make inputs always readable on dark neon pages ---------- */
+
+/* 1) Universal input/readable rules */
+input, textarea, select {
+  color: #ffffff !important;               /* typed text visible */
+  background: rgba(255,255,255,0.03) !important; /* subtle dark background for inputs */
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  padding: 12px 14px !important;
+  border-radius: 12px !important;
+  font-size: 15px !important;
+  outline: none !important;
+  box-sizing: border-box;
+}
+
+/* ensure file inputs are readable */
+input[type="file"] { background: rgba(255,255,255,0.04) !important; }
+
+/* 2) Placeholder visibility */
+input::placeholder, textarea::placeholder {
+  color: rgba(255,255,255,0.58) !important;
+}
+
+/* 3) Force inputs inside .field to keep layout and icon alignment */
+.field {
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  background: rgba(255,255,255,0.02) !important;
+  border-radius:12px !important;
+  padding:8px 10px !important;
+}
+.field .icon {
+  min-width:28px !important;
+  text-align:center !important;
+  font-size:18px !important;
+  opacity:0.9 !important;
+}
+
+/* text inside field input */
+.field input {
+  flex:1 !important;
+  background: transparent !important;
+  border: none !important;
+  padding:10px 6px !important;
+  color: #fff !important;
+}
+
+/* 4) Fix referral visible input specifically (keeps inline look with button) */
+#referralCodeVisible {
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  color: #fff !important;
+  padding: 12px !important;
+}
+
+/* 5) Ensure forgot/reset page plain inputs match card theme */
+.card input, .card textarea {
+  background: rgba(255,255,255,0.03) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  padding: 12px !important;
+  display:block;
+  width:100%;
+  margin:10px 0;
+}
+
+/* 6) Buttons remain visible on dark background */
+.btn, button {
+  color: #032 !important;
+  background: linear-gradient(90deg, var(--neon), var(--neon-2)) !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+}
+
+/* 7) Small mobile improvements */
+@media (max-width:520px) {
+  .field { padding:10px !important; gap:8px !important; }
+  .field .icon { min-width:26px; font-size:16px; }
+  input { font-size:15px !important; padding:10px !important; }
+}
