@@ -2,28 +2,42 @@
 
 const API_BASE = "https://plinko-app.onrender.com";
 
-document.getElementById('registerForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  
-  const formData = new FormData(e.target);
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("registerForm");
 
-  try {
-    const res = await fetch(`${API_BASE}/api/register`, {
-      method: 'POST',
-      body: formData
-    });
-
-    const j = await res.json();
-    if (!j.ok) return alert(j.error || "Registration failed");
-
-    // SAVE USER TO LOCAL STORAGE
-    localStorage.setItem("plinkoUser", JSON.stringify(j.user));
-
-    alert("Registration successful! $150 bonus added.");
-    location.href = "plinko.html";
-    
-  } catch (err) {
-    alert("Network error.");
-    console.log(err);
+  if (!form) {
+    console.error("registerForm NOT FOUND");
+    return;
   }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/register`, {
+        method: "POST",
+        body: formData
+      });
+
+      const j = await res.json();
+      console.log("REG RESULT:", j);
+
+      if (!j.ok) {
+        alert(j.error || "Registration failed");
+        return;
+      }
+
+      // SAVE USER
+      localStorage.setItem("plinkoUser", JSON.stringify(j.user));
+
+      alert("Registration success! $150 bonus added.");
+      location.href = "plinko.html";
+
+    } catch (err) {
+      console.error(err);
+      alert("Network error—backend unreachable.");
+    }
+  });
 });
