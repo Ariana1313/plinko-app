@@ -1,64 +1,41 @@
 <!doctype html>
-<html class="neon-page">
+<html>
 <head>
   <meta charset="utf-8">
-  <title>Login — Neon Plinko</title>
+  <title>Login — Plinko N.U</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="css/style.css">
-  <style>
-    body { background:#050509; font-family:Inter,Arial; color:white; }
-    h2 { text-align:center; margin-bottom:10px; font-size:26px; }
-    .container { padding:15px; }
-    .form-card { background:#0d0d17; padding:20px; border-radius:12px; box-shadow:0 0 12px #0ff2; }
-    .field { display:flex; align-items:center; margin:10px 0; background:#111; border-radius:8px; padding:8px; }
-    .icon { width:30px; text-align:center; font-size:18px; }
-    input { flex:1; background:none; border:none; color:white; padding:8px; font-size:16px; }
-    input::placeholder { color:#aaa; }
-    .btn { background:#09f; color:white; padding:12px; border:none; border-radius:8px; width:100%; margin-top:12px; font-size:18px; font-weight:bold; }
-    .btn:hover { opacity:0.9; }
-    .small-link { text-align:right; margin-top:5px; font-size:14px; color:#0af; }
-    .footer { text-align:center; padding:20px; color:#666; font-size:12px; }
-  </style>
 </head>
-<body>
-
-  <div class="container">
-    <div style="text-align:center;margin-bottom:20px;">
-      <img src="images/logo.png" width="100" style="border-radius:12px;">
-      <h3 style="color:#0af;">Welcome Back</h3>
-      <p style="color:#bbb;font-size:14px;">Log in to access your balance & rewards</p>
+<body class="neon-page">
+  <header class="site-header">
+    <div class="left">
+      <img src="assets/logo-card.png" alt="logo" class="logo-card">
+      <h1>Plinko N.U</h1>
     </div>
+    <nav class="right">
+      <a href="register.html" class="small-link">Register</a>
+    </nav>
+  </header>
 
-    <div class="form-card">
+  <main class="container">
+    <section class="form-card">
       <h2>Login</h2>
-
+      <p class="subtitle">Welcome back — your balance and bonuses will show after login.</p>
       <form id="loginForm">
-        <div class="field">
-          <label class="icon">👤</label>
-          <input id="loginUsername" placeholder="Username or Email" type="text" required>
+        <div class="field"><span class="icon">🔒</span><input id="loginUsername" placeholder="Username or Email" type="text" required /></div>
+        <div class="field"><span class="icon">🔑</span><input id="loginPassword" placeholder="Password" type="password" required /></div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+          <button class="btn" type="submit">Login</button>
+          <a class="btn small ghost" href="register.html">Register</a>
+          <a style="margin-left:auto" href="forgot.html">Forgot?</a>
         </div>
-
-        <div class="field">
-          <label class="icon">🔒</label>
-          <input id="loginPassword" placeholder="Password" type="password" required>
-        </div>
-
-        <button class="btn" type="submit">Login</button>
-
-        <div class="small-link">
-          <a href="forgot.html">Forgot password?</a>
-        </div>
-
-        <div class="small-link" style="margin-top:10px;text-align:center;">
-          <a href="register.html">Create an account</a>
-        </div>
-
       </form>
-    </div>
-  </div>
+    </section>
+  </main>
 
-  <div class="footer">© 2025 Neon Plinko</div>
+  <footer class="footer">© 2025 Plinko N.U</footer>
 
+  <script src="js/auth.js"></script>
   <script src="js/login.js"></script>
 </body>
 </html>
