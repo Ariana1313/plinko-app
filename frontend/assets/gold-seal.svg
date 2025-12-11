@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g1" x1="0" x2="1">
+      <stop offset="0" stop-color="#FFD966"/>
+      <stop offset="1" stop-color="#D4AF37"/>
+    </linearGradient>
+  </defs>
+  <circle cx="200" cy="160" r="110" fill="url(#g1)" stroke="#b8860b" stroke-width="6"/>
+  <text x="200" y="155" font-family="Georgia, serif" font-size="26" text-anchor="middle" fill="#2b2b2b">PLINKO N.U</text>
+  <text x="200" y="185" font-family="Georgia, serif" font-size="18" text-anchor="middle" fill="#2b2b2b">Plinko N.U Certified</text>
+  <g transform="translate(200,320) scale(1)">
+    <path d="M -60 0 A 60 20 0 0 1 60 0 L 40 30 A 40 15 0 0 1 -40 30 Z" fill="#b8860b" opacity="0.9"/>
+  </g>
+</svg>
