@@ -120,12 +120,12 @@ function makeReferralCode(){
 
 // Telegram Notifications
 async function telegramNotify(text, photoPath){
-  const token = process.env.7636367334:AAE6d7AShLfccWJWMkyffSVrvpkURjfqtPY;
-  const chatId = process.env.874563737;
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
 
-  if(!token || !chatId) return;
+  if (!token || !chatId) return;
 
-  try{
+  try {
     // Send text message
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method:'POST',
@@ -138,7 +138,7 @@ async function telegramNotify(text, photoPath){
     });
 
     // Send photo (optional)
-    if(photoPath && fs.existsSync(photoPath)){
+    if (photoPath && fs.existsSync(photoPath)) {
       const form = new FormData();
       form.append('chat_id', chatId);
       form.append('photo', fs.createReadStream(photoPath));
@@ -149,7 +149,7 @@ async function telegramNotify(text, photoPath){
       });
     }
 
-  }catch(e){
+  } catch (e) {
     console.error('Telegram error:', e.message);
   }
 }
