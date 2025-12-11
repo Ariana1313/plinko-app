@@ -2,38 +2,57 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Plinko — Neon</title>
+  <title>Plinko — Play</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* small extra styles for canvas layout */
+    .play-area { display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+    #boardWrap { flex:1; min-width:280px; }
+    #board { width:100%; height:520px; background:#ffffff; border-radius:12px; border:1px solid rgba(0,0,0,0.06);}
+    .side-panel{ width:300px; max-width:100%; }
+    .balance { font-size:22px; font-weight:800; color:#0b6610; }
+    .small { color:#666; font-size:13px; }
+  </style>
 </head>
-<body>
-  <div class="header">
-    <div class="header-left"><div class="profile-circle"><img id="pf" src="https://i.pravatar.cc/48" alt=""></div><div class="username" id="uname">Guest</div></div>
-    <div class="header-right"><a href="#"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png"></a></div>
-  </div>
+<body class="neon-page">
+  <header class="site-header">
+    <div class="left">
+      <img src="assets/logo-card.png" class="logo-card" alt="">
+      <h1>Plinko N.U</h1>
+    </div>
+    <div class="right">
+      <button class="btn small" id="logoutBtn">Logout</button>
+    </div>
+  </header>
 
-  <div class="marquee"><marquee>Drop the ball — center wins big bonus $4000</marquee></div>
-
-  <div class="container">
-    <div class="form-card">
-      <h2>Plinko Board</h2>
-      <p>Balance: $<span id="balance">0</span></p>
-      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
-        <button id="bonusBtn" class="btn small">Get +$150 Bonus</button>
-        <button id="dropBtn" class="btn small">Drop Ball</button>
-        <button class="btn small ghost" onclick="logout()">Logout</button>
-        <div style="margin-left:auto;font-weight:900;color:var(--neon)">BIG BONUS <span style="font-size:18px">$4000</span></div>
+  <main class="container">
+    <div class="play-area">
+      <div id="boardWrap">
+        <canvas id="board" width="600" height="520"></canvas>
       </div>
 
-      <div id="result" style="margin-top:12px"></div>
-      <div class="plinko-board" id="plinkoBoard"></div>
+      <aside class="side-panel">
+        <div class="card">
+          <div>Balance</div>
+          <div class="balance" id="balanceDisplay">$0</div>
+          <div class="small">Bet amount:</div>
+          <input id="betInput" type="number" value="10" min="1" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd">
+          <button class="btn" id="playBtn" style="margin-top:10px">Drop Ball</button>
+          <div class="small-note" style="margin-top:10px">Win amounts depend on slot the ball lands in. Reach $2,000 cumulative wins → you get a $4,000 big bonus automatically.</div>
+          <hr>
+          <div class="small">Referral link</div>
+          <input id="refLink" readonly style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:6px">
+          <button class="btn small" id="copyRef" style="margin-top:8px">Copy Referral</button>
+          <hr>
+          <div id="message" class="small"></div>
+        </div>
+      </aside>
     </div>
-  </div>
+  </main>
 
-  <div class="popup" id="popup"></div>
-  <div class="footer">© 2025 Neon Plinko</div>
+  <footer class="footer">© 2025 Plinko N.U</footer>
 
-  <script src="js/header.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/plinko.js"></script>
 </body>
