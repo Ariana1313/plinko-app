@@ -75,3 +75,10 @@ body{font-family:Inter,system-ui,Arial; background:var(--bg); color:var(--text);
   .card img{height:100px}
   .plinko-board{height:360px}
 }
+
+/* Neon Form Theme Patch */
+.neon-page body { background:#050509 !important; color:white !important; }
+.neon-page .form-card { background:#0d0d17 !important; box-shadow:0 0 12px #0ff2; }
+.neon-page .field { background:#111 !important; border:1px solid #0af3; }
+.neon-page input { color:white !important; }
+.neon-page input::placeholder { color:#aaa; }
