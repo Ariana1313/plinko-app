@@ -2,8 +2,6 @@
 // Plinko frontend logic matched to backend response:
 // POST /api/play  -> { ok, balance, win, isJackpot, jackpotAward, message }
 
-const API_BASE = "https://plinko-app.onrender.com"; // <- use your deployed backend
-
 // Helpers from your auth.js (should exist)
 function getUserSafe(){
   try { return JSON.parse(localStorage.getItem('plinkoUser') || 'null'); }
