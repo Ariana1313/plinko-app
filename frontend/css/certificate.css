@@ -1,0 +1,100 @@
+/* css/certificate.css - Modern Blue VIP Certificate */
+body {
+  background: #f3f6fb;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  padding: 30px;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+.certificate {
+  width: 820px;
+  max-width: 96%;
+  margin: 20px auto;
+  background: white;
+  padding: 48px 64px;
+  border-radius: 8px;
+  border: 6px solid #0b3b66;
+  box-shadow: 0 18px 60px rgba(10,30,60,0.12);
+  position: relative;
+  color: #102a43;
+}
+.logo {
+  width: 100px;
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  border-radius: 50%;
+  background: white;
+  padding: 6px;
+  box-shadow: 0 6px 18px rgba(10,30,60,0.08);
+}
+.header {
+  text-align: center;
+  margin-top: 12px;
+}
+.title {
+  font-size: 34px;
+  margin: 6px 0;
+  letter-spacing: 1px;
+  color: #083a63;
+  font-weight: 700;
+}
+.subtitle {
+  margin-top: 4px;
+  color: #254a6b;
+  font-size: 15px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+.lead {
+  margin-top: 28px;
+  text-align: center;
+  font-size: 18px;
+  color: #23364a;
+}
+.recipient {
+  font-size: 36px;
+  text-align: center;
+  margin: 18px 0;
+  font-weight: 800;
+  color: #05283a;
+  letter-spacing: 0.6px;
+}
+.amount {
+  font-size: 28px;
+  text-align: center;
+  margin: 8px 0 20px 0;
+  color: #0a7f52;
+  font-weight: 700;
+}
+.meta {
+  text-align: center;
+  color: #4b6577;
+  margin-top: 6px;
+}
+.seal {
+  width: 160px;
+  display:block;
+  margin: 36px auto 0 auto;
+}
+.footer {
+  margin-top: 22px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color:#456173;
+  font-size:14px;
+}
+.sign {
+  text-align:right;
+}
+.sign .by {
+  font-weight:700;
+  color:#0b3b66;
+}
+@media (max-width:520px){
+  .certificate{padding:20px}
+  .logo{width:80px;top:12px;left:12px}
+  .title{font-size:26px}
+  .recipient{font-size:28px}
+}
