@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="css/style.css">
 </head>
+  <script>
+  window.onerror = function(msg, url, line, col, error) {
+    alert("JS ERROR: " + msg + "\nLine: " + line);
+  };
+</script>
 <body class="neon-page">
   <header class="site-header">
     <div class="left">
