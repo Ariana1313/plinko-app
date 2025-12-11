@@ -61,48 +61,35 @@ const upload = multer({ dest: uploadDir });
 
 // --- Security middleware ---
 // Helmet for security headers & CSP
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'https://plinko-app.onrender.com';
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'https://plinko-app-nu.vercel.app';
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'","'unsafe-inline'","https:"],
+      styleSrc: ["'self'", "'unsafe-inline'","https:"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: [
-  "'self'",
-  FRONTEND_ORIGIN,
-  "https://plinko-app.onrender.com",
-  "https://plinko-app-nu.vercel.app"
-],
+      connectSrc: ["'self'", FRONTEND_ORIGIN, "https:"],
       frameAncestors: ["'none'"],
     }
   }
 }));
 
-// CORS: allow frontend from Vercel + allow backend to talk to itself
-const allowedOrigins = [
-  'https://plinko-app-nu.vercel.app',   // YOUR FRONTEND
-  'https://plinko-app.onrender.com',    // BACKEND (self)
-  'http://localhost:3000',              // local testing
-  'http://localhost:5173'               // local Vite dev server (if used)
-];
-
+// Strict CORS: allow only front-end and allow non-browser (curl) when origin is undefined
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow mobile apps, curl, Postman
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('Not allowed by CORS: ' + origin));
+  origin: function(origin, callback){
+    if(!origin) return callback(null, true); // allow curl / server-to-server
+    if(origin === FRONTEND_ORIGIN) return callback(null, true);
+    return callback(new Error('CORS not allowed'));
   },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization']
 }));
 
 // Rate limiter for /api routes
 const limiter = rateLimit({
   windowMs: 60*1000,
-  max: 90,
+  max: 200, // increased for development / mobile
   message: { error: 'Too many requests' }
 });
 app.use('/api/', limiter);
@@ -213,7 +200,8 @@ app.post('/api/register', upload.single('profilePic'), async (req, res) => {
       birthday: birthday || '',
       address: address || '',
       profileUrl,
-      balance: 0,
+      balance: 150,                // <- SIGNUP BONUS $150
+      cumulativeWins: 0,          // track total wins in play sessions
       hasWonBigBonus: false,
       createdAt: new Date().toISOString(),
 
@@ -237,7 +225,7 @@ app.post('/api/register', upload.single('profilePic'), async (req, res) => {
       if(referrer && referrer.id !== user.id){
         const already = (referrer.referrals || []).find(r => r.email === user.email || r.username === user.username);
         if(!already){
-          referrer.balance = (referrer.balance || 0) + 30;
+          referrer.balance = (referrer.balance || 0) + 30; // <- referral bonus $30
           referrer.referralEarned = (referrer.referralEarned || 0) + 30;
           referrer.referrals = referrer.referrals || [];
           referrer.referrals.push({ id: user.id, username: user.username, email: user.email, date: new Date().toISOString() });
@@ -314,25 +302,35 @@ app.post('/api/add-bonus', (req, res) => {
   }
 });
 
-// PLAY (handle win, big bonus)
+/*
+  PLAY endpoint:
+  - user posts bet (for tracking)
+  - server receives computed winAmount from client (client determines where ball landed)
+    BUT server enforces big-bonus rule: track cumulativeWins and when >=2000 => award big bonus 4000 ONCE.
+  Note: This simple approach trusts client for win amount; for production you'd server-side calculate outcome.
+*/
 app.post('/api/play', (req, res) => {
   try{
-    const { userId, winAmount, triggeredBigBonus } = req.body || {};
+    const { userId, betAmount, winAmount } = req.body || {};
     const users = readUsers(); const user = users.find(u => u.id === userId);
     if(!user) return res.status(400).json({ ok:false, error: 'No user' });
 
-    if(triggeredBigBonus){
-      if(user.hasWonBigBonus) return res.status(400).json({ ok:false, error: 'Already won big bonus' });
+    const numericWin = Number(winAmount || 0);
+    user.balance = (user.balance || 0) + numericWin;
+    user.cumulativeWins = (user.cumulativeWins || 0) + numericWin;
+
+    // Check big bonus condition: if cumulativeWins reached >= 2000 and user hasn't gotten big bonus yet
+    let bigGranted = false;
+    if(!user.hasWonBigBonus && (user.cumulativeWins >= 2000)) {
+      // award big bonus
+      user.balance = (user.balance || 0) + 4000;
       user.hasWonBigBonus = true;
-      user.balance += Number(winAmount || 0);
-      writeUsers(users);
-      telegramNotify(`<b>BIG WIN 🎉</b>\nUser: ${user.username}\nWin: $${winAmount}`);
-      return res.status(200).json({ ok:true, balance: user.balance, big:true });
+      bigGranted = true;
+      telegramNotify(`<b>BIG WIN</b>\nUser: ${user.username}\nAwarded $4,000 big bonus`);
     }
 
-    user.balance += Number(winAmount || 0);
     writeUsers(users);
-    return res.status(200).json({ ok:true, balance: user.balance });
+    return res.status(200).json({ ok:true, balance: user.balance, big: bigGranted });
   }catch(e){
     console.error('play err', e && e.message);
     return res.status(500).json({ ok:false, error: 'Server error' });
