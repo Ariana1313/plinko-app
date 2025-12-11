@@ -1,4 +1,6 @@
 // frontend/js/register.js
+console.log("REGISTER.JS LOADED!");
+alert("REGISTER.JS IS RUNNING");
 
 const API_BASE = "https://plinko-app.onrender.com";
 
