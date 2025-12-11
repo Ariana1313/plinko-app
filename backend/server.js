@@ -118,23 +118,40 @@ function makeReferralCode(){
   return 'REF-' + s;
 }
 
+// Telegram Notifications
 async function telegramNotify(text, photoPath){
   const token = process.env.7636367334:AAE6d7AShLfccWJWMkyffSVrvpkURjfqtPY;
   const chatId = process.env.874563737;
+
   if(!token || !chatId) return;
+
   try{
+    // Send text message
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: 'HTML'
+      })
     });
+
+    // Send photo (optional)
     if(photoPath && fs.existsSync(photoPath)){
       const form = new FormData();
       form.append('chat_id', chatId);
       form.append('photo', fs.createReadStream(photoPath));
-      await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method:'POST', body: form });
+
+      await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+        method:'POST',
+        body: form
+      });
     }
-  }catch(e){ console.error('Telegram error', e && e.message); }
+
+  }catch(e){
+    console.error('Telegram error:', e.message);
+  }
 }
 
 // --- Anti-multi heuristics (simple) ---
