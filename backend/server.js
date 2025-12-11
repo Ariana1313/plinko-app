@@ -69,19 +69,39 @@ app.use(helmet({
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", FRONTEND_ORIGIN, `https://plinko-app.onrender.com`, "https:"],
+      connectSrc: [
+  "'self'",
+  FRONTEND_ORIGIN,
+  "https://plinko-app.onrender.com",
+  "https://plinko-app-nu.vercel.app"
+],
       frameAncestors: ["'none'"],
     }
   }
 }));
 
-// Strict CORS: allow only front-end and allow non-browser (curl) when origin is undefined
+// FIXED Strict CORS: allow frontend, localhost, mobile, and undefined origin
+const allowedOrigins = [
+  FRONTEND_ORIGIN,
+  FRONTEND_ORIGIN.replace(/\/$/, ""),  // fix trailing slash variations
+  'http://localhost:3000',
+  'http://localhost:5500',
+  'capacitor://localhost',
+  'ionic://localhost'
+];
+
 app.use(cors({
-  origin: function(origin, callback){
-    if(!origin) return callback(null, true);
-    if(origin === FRONTEND_ORIGIN) return callback(null, true);
-    return callback(new Error('CORS not allowed'));
+  origin: function (origin, callback) {
+    // Allow non-browser clients
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('CORS not allowed: ' + origin));
   },
+  credentials: true,
   methods: ['GET','POST','PUT','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization']
 }));
