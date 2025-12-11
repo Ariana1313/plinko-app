@@ -1,3 +1,14 @@
+// --- AUDIO SETUP ---
+const sLose = new Audio("assets/sounds/lose.mp3");
+const sWin = new Audio("assets/sounds/win.mp3");
+const sJackpot = new Audio("assets/sounds/jackpot.mp3");
+const sTap = new Audio("assets/sounds/tap.mp3");
+const sClap = new Audio("assets/sounds/clap.mp3");
+
+// To avoid iPhone autoplay issues
+[sLose, sWin, sJackpot, sTap, sClap].forEach(a => {
+    a.volume = 1.0; 
+});
 // plinko.js - simple canvas physics plinko
 const API = "https://plinko-app.onrender.com";
 const canvas = document.getElementById('board');
