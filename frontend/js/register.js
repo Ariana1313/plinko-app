@@ -1,5 +1,5 @@
 // register.js
-const API = "https://plinko-app.onrender.com";
+const API = "https://plinko-app.onrender.com"; // your backend
 
 // auto-fill referral code from URL
 const urlParams = new URLSearchParams(window.location.search);
@@ -25,15 +25,23 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
       body: formData
     });
 
-    const data = await res.json();
+    if (!res.ok) {
+      const text = await res.text();
+      try { const j = JSON.parse(text); alert(j.error || j.message || 'Registration failed'); }
+      catch(e){ alert('Registration failed'); }
+      return;
+    }
 
+    const data = await res.json();
     if (!data.ok) {
       alert(data.error || "Registration failed.");
       return;
     }
 
-    alert("Account created successfully!");
-    window.location.href = "login.html";
+    // save user to localStorage (public fields)
+    localStorage.setItem('plinkoUser', JSON.stringify(data.user));
+    alert("Account created successfully! $150 bonus added.");
+    window.location.href = "plinko.html";
 
   } catch (err) {
     console.error(err);
