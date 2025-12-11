@@ -2,47 +2,70 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Register — Neon Plinko</title>
+  <title>Create Account — Neon Plinko</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background:#050509; font-family:Arial; color:white; }
+    h2 { text-align:center; margin-bottom:10px; font-size:26px; }
+    .container { padding:15px; }
+    .form-card { background:#0d0d17; padding:20px; border-radius:12px; box-shadow:0 0 12px #0ff2; }
+    .field { display:flex; align-items:center; margin:10px 0; background:#111; border-radius:8px; padding:8px; }
+    .icon { width:30px; text-align:center; font-size:18px; }
+    input { flex:1; background:none; border:none; color:white; padding:8px; font-size:16px; }
+    input::placeholder { color:#aaa; }
+    .btn { background:#09f; color:white; padding:12px; border:none; border-radius:8px; width:100%; margin-top:12px; font-size:18px; font-weight:bold; }
+    .btn:hover { opacity:0.9; }
+    .footer { text-align:center; padding:20px; color:#666; font-size:12px; }
+    .small-note { text-align:center; font-size:12px; color:#aaa; margin-top:10px; }
+  </style>
 </head>
 <body>
-  <div class="header">
-    <div class="header-left"><div class="profile-circle"><img src="https://i.pravatar.cc/48" alt=""></div><div class="username">Create Account</div></div>
-    <div class="header-right"><a href="#"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png"></a></div>
-  </div>
 
-  <div class="marquee"><marquee>Create account with email and 4-digit secret pin</marquee></div>
   <div class="container">
+    <div style="text-align:center;margin-bottom:20px;">
+      <img src="images/logo.png" width="100" style="border-radius:12px;">
+      <h3 style="color:#0af;">Welcome to Neon Plinko</h3>
+      <p style="font-size:14px;color:#bbb;">Earn rewards · Play games · Invite friends</p>
+    </div>
+
     <div class="form-card">
-      <h2>Register</h2>
+      <h2>Create Account</h2>
+
       <form id="registerForm" enctype="multipart/form-data">
+
+        <!-- hidden true referral -->
         <input type="hidden" name="referralCode" id="referralCode" value="">
-        <div class="field"><label class="icon">👤</label><input name="firstName" placeholder="First name" required /></div>
-        <div class="field"><label class="icon">👥</label><input name="lastName" placeholder="Last name" /></div>
-        <div class="field"><label class="icon">🆔</label><input name="username" placeholder="Username" required /></div>
-        <div class="field"><label class="icon">✉️</label><input name="email" placeholder="Email" type="email" required /></div>
-        <div class="field"><label class="icon">🔒</label><input name="password" placeholder="Password" type="password" required /></div>
-        <div class="field"><label class="icon">🔐</label><input name="secretPin" placeholder="4-digit secret pin" maxlength="4" required /></div>
-        <div class="field"><label class="icon">📞</label><input name="phone" placeholder="Phone" /></div>
-        <div class="field"><label class="icon">🎂</label><input name="birthday" placeholder="Birthday (YYYY-MM-DD)" /></div>
-        <div class="field"><label class="icon">🏠</label><input name="address" placeholder="Address" /></div>
-        <div class="field"><label class="icon">🖼️</label><input name="profilePic" type="file" accept="image/*" /></div>
-        <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
-          <div class="field">
-  <label class="icon">🔁</label>
-  <input name="referralCode" id="referralCodeVisible" placeholder="Referral code (optional)">
-</div>
-          <button class="btn" type="submit">Create Account</button>
-          <a class="btn small ghost" href="login.html">Already have account</a>
+
+        <div class="field"><label class="icon">👤</label><input name="firstName" placeholder="First name" required></div>
+        <div class="field"><label class="icon">👥</label><input name="lastName" placeholder="Last name"></div>
+        <div class="field"><label class="icon">🆔</label><input name="username" placeholder="Username" required></div>
+        <div class="field"><label class="icon">✉️</label><input name="email" type="email" placeholder="Email" required></div>
+        <div class="field"><label class="icon">🔒</label><input name="password" type="password" placeholder="Password" required></div>
+        <div class="field"><label class="icon">🔐</label><input name="secretPin" maxlength="4" placeholder="4-digit Secret PIN" required></div>
+        <div class="field"><label class="icon">📞</label><input name="phone" placeholder="Phone number"></div>
+        <div class="field"><label class="icon">🎂</label><input name="birthday" placeholder="Birthday (YYYY-MM-DD)"></div>
+        <div class="field"><label class="icon">🏠</label><input name="address" placeholder="Address"></div>
+        <div class="field"><label class="icon">🖼️</label><input name="profilePic" type="file" accept="image/*"></div>
+
+        <div class="field">
+          <label class="icon">🎁</label>
+          <input id="referralCodeVisible" placeholder="Referral Code (optional)">
         </div>
+
+        <button class="btn" type="submit">Create Account</button>
+
+        <a href="login.html" style="color:#0af;display:block;text-align:center;margin-top:10px;">
+          Already have an account?
+        </a>
       </form>
-      <p class="small-note">We’ll never share your details. This app is for fun.</p>
+
+      <p class="small-note">We will never share your information.</p>
     </div>
   </div>
 
   <div class="footer">© 2025 Neon Plinko</div>
-  <script src="js/header.js"></script>
+
   <script src="js/register.js"></script>
 </body>
 </html>
