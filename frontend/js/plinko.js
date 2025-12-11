@@ -1,253 +1,381 @@
-/* frontend/js/plinko.js
-   Server-side outcomes. Animates based on server slotLabel.
-*/
+// plinko.js
+// expects auth.js to define getUser() and logout() helpers
+// and the backend to have POST /api/play { userId, bet } -> { ok, balance, win, isJackpot, jackpotAward, message }
 
-const API = "https://plinko-app.onrender.com";
+const API_BASE = (window.location.origin.indexOf('localhost') !== -1) ? 'http://localhost:3000' : window.location.origin;
 
-const getUser = () => {
-  try { return JSON.parse(localStorage.getItem('plinkoUser') || 'null'); }
-  catch(e){ return null; }
-};
-const saveUser = (u) => localStorage.setItem('plinkoUser', JSON.stringify(u));
-
-let user = getUser();
-if(!user){ alert('Please login'); location.href='login.html'; }
-
-const canvas = document.getElementById('board');
-const ctx = canvas.getContext('2d');
-const WIDTH = canvas.width;
-const HEIGHT = canvas.height;
-
-const sLose = new Audio("assets/sounds/lose.mp3");
-const sWin = new Audio("assets/sounds/win.mp3");
-const sJackpot = new Audio("assets/sounds/jackpot.mp3");
-const sTap = new Audio("assets/sounds/tap.mp3");
-const sClap = new Audio("assets/sounds/clap.mp3");
-[sLose,sWin,sJackpot,sTap,sClap].forEach(a=>a.volume=1);
-
-// UI refs
+// DOM
 const profilePic = document.getElementById('profilePic');
-const profileName = document.getElementById('profileName');
+const usernameDisplay = document.getElementById('usernameDisplay');
+const userIdSmall = document.getElementById('userIdSmall');
 const balanceDisplay = document.getElementById('balanceDisplay');
-const refInput = document.getElementById('referralInput');
-const copyBtn = document.getElementById('copyReferral');
-const betInput = document.getElementById('betInput');
-const playBtn = document.getElementById('playBtn');
-const popup = document.getElementById('popup');
+const betInput = document.getElementById('betAmount');
+const dropBtn = document.getElementById('dropBtn');
+const resultBox = document.getElementById('resultBox');
+const referralInput = document.getElementById('referralInput');
+const copyRefBtn = document.getElementById('copyRef');
 const withdrawBtn = document.getElementById('withdrawBtn');
-const messageEl = document.getElementById('message');
-document.getElementById('userIdShort').innerText = user.id ? user.id.slice(0,8) : '—';
+const logoutBtn = document.getElementById('logoutBtn');
 
-// fill UI
-function refreshUI(){
-  profileName.innerText = user.username || 'Player';
-  profilePic.src = user.profileUrl || 'assets/default-avatar.png';
-  balanceDisplay.innerText = '$' + Number(user.balance || 0).toLocaleString();
-  refInput.value = `${location.origin}/register.html?ref=${user.referralCode || ''}`;
+let user = getUser(); // from auth.js
+if(!user){
+  // if not logged in, send to login
+  location.href = 'login.html';
 }
-refreshUI();
+
+let canWithdraw = false; // unlocked after jackpot
+let isAnimating = false;
+
+// set header
+usernameDisplay.innerText = user.username || 'Player';
+userIdSmall.innerText = user.id ? `ID: ${user.id.slice(0,8)}` : '';
+if(user.profileUrl){
+  // profileUrl path might be relative to backend; make absolute if needed
+  const maybe = user.profileUrl.startsWith('/') ? API_BASE + user.profileUrl : user.profileUrl;
+  profilePic.src = maybe;
+}
+
+// referral link
+const refLink = `${window.location.origin}/register.html?ref=${user.referralCode || ''}`;
+referralInput.value = refLink;
 
 // copy referral
-copyBtn.addEventListener('click', async ()=>{
-  try{
-    await navigator.clipboard.writeText(refInput.value);
-    copyBtn.innerText = 'Copied ✓';
-    setTimeout(()=>copyBtn.innerText = 'Copy Referral', 1800);
-  }catch(e){
-    alert('Copy failed');
+copyRefBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(referralInput.value);
+    copyRefBtn.innerText = 'Copied ✓';
+    setTimeout(()=> copyRefBtn.innerText = 'Copy', 1400);
+  } catch(e){
+    alert('Copy failed: ' + (e.message || e));
   }
 });
 
-// create visual pegs and slots
-const ROWS = 8, COLS = 9;
-function drawBoard(){
-  // background
-  ctx.clearRect(0,0,WIDTH,HEIGHT);
-  ctx.fillStyle = '#f2fff7';
-  ctx.fillRect(0,0,WIDTH,HEIGHT);
+// logout
+logoutBtn.addEventListener('click', () => {
+  logout(); // from auth.js
+});
 
-  // pegs
-  ctx.fillStyle = '#0b6';
-  for(let r=0;r<ROWS;r++){
-    for(let c=0;c<COLS;c++){
-      const offset = (r%2===0)? 40 : 20;
-      const x = c * (WIDTH / COLS) + offset;
-      const y = 60 + r*50;
+// load sounds
+const sndLose = document.getElementById('sndLose');
+const sndWin = document.getElementById('sndWin');
+const sndJackpot = document.getElementById('sndJackpot');
+const sndTap = document.getElementById('sndTap');
+const sndClap = document.getElementById('sndClap');
+
+function playSound(s){
+  try {
+    s.currentTime = 0;
+    s.play();
+  } catch(e){}
+}
+
+// fetch fresh user info (balance)
+async function refreshUser(){
+  try {
+    const res = await fetch(`${API_BASE}/api/user/${user.id}`);
+    const data = await res.json();
+    if(data && data.ok && data.user){
+      user = data.user;
+      saveUser(user);
+      balanceDisplay.innerText = `$${(user.balance || 0).toFixed(0)}`;
+      // withdraw unlocked if user has jackpot flag (assuming server sets hasWonBigBonus or allowWithdraw)
+      // for safety we let server send flag at /api/user; check user.allowWithdraw or user.hasJackpot
+      canWithdraw = !!user.allowWithdraw || !!user.hasJackpot || !!user.jackpotWon;
+      withdrawBtn.disabled = !canWithdraw;
+      withdrawBtn.innerText = canWithdraw ? 'Withdraw' : 'Withdraw (locked)';
+    } else {
+      console.warn('Failed to refresh user', data);
+    }
+  } catch(e){
+    console.error('refreshUser err', e);
+  }
+}
+
+// initial load
+refreshUser();
+
+// ---------- Plinko board drawing + animation (canvas) -----------
+const canvas = document.getElementById('plinkoCanvas');
+const ctx = canvas.getContext('2d');
+
+// scale for crispness on high-DPI
+function setCanvasSize(){
+  const rect = canvas.getBoundingClientRect();
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = Math.floor(rect.width * ratio);
+  canvas.height = Math.floor(rect.height * ratio);
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+}
+setCanvasSize();
+window.addEventListener('resize', () => { setCanvasSize(); drawBoard(); });
+
+const board = {
+  cols: 9,
+  rows: 6,
+  pegRadius: 6,
+  pegSpacingX: 62,
+  pegSpacingY: 60,
+  leftPadding: 36,
+  topPadding: 36,
+};
+
+function drawBoard(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // background
+  ctx.fillStyle = '#f7fff7';
+  roundRect(ctx, 0, 0, canvas.width/ (window.devicePixelRatio||1), canvas.height/(window.devicePixelRatio||1), 12, true, false);
+
+  // draw pegs
+  const w = canvas.width/(window.devicePixelRatio||1);
+  const h = canvas.height/(window.devicePixelRatio||1);
+  ctx.fillStyle = '#00c853';
+  for(let r=0;r<board.rows;r++){
+    const y = board.topPadding + r * board.pegSpacingY;
+    for(let c=0;c<board.cols;c++){
+      const offset = (r % 2 === 0) ? 0 : board.pegSpacingX/2;
+      const x = board.leftPadding + offset + c * board.pegSpacingX;
       ctx.beginPath();
-      ctx.arc(x,y,6,0,Math.PI*2);
+      ctx.ellipse(x, y, board.pegRadius, board.pegRadius*0.85, 0, 0, Math.PI*2);
       ctx.fill();
     }
   }
 
-  // slots row visual
-  const slots = ['LOSE','10','20','50','100','200','500','1000','JACKPOT'];
-  const slotW = WIDTH / slots.length;
-  for(let i=0;i<slots.length;i++){
+  // draw slots bottom
+  const slotCount = board.cols + 1; // one more than columns
+  const slotWidth = (w - (board.leftPadding*2)) / slotCount;
+  const bottomY = board.topPadding + board.rows * board.pegSpacingY + 48;
+  for(let i=0;i<slotCount;i++){
+    const x = board.leftPadding + i*slotWidth;
     ctx.fillStyle = '#fff';
-    ctx.fillRect(i*slotW, HEIGHT - 80, slotW-2, 80);
-    ctx.fillStyle = '#0b6';
-    ctx.font = 'bold 16px Inter, Arial';
-    ctx.fillText(slots[i], i*slotW + 12, HEIGHT - 40);
+    ctx.fillRect(x, bottomY, slotWidth-6, 64);
+    ctx.strokeStyle = 'rgba(0,0,0,0.04)';
+    ctx.strokeRect(x, bottomY, slotWidth-6, 64);
   }
+
+  // inject labels
+  const labelsEl = document.getElementById('slotLabels');
+  labelsEl.innerHTML = '';
+  const amounts = ['LOSE', 10, 20, 50, 100, 200, 500, 1000, 'JACKPOT'];
+  amounts.forEach(a => {
+    const div = document.createElement('div');
+    div.className = 'slot';
+    div.innerText = typeof a === 'number' ? `$${a}` : a;
+    labelsEl.appendChild(div);
+  });
 }
 drawBoard();
 
-// ball for animation (DOM overlay approach easier)
-let ball = document.createElement('div');
-ball.style.position = 'absolute';
-ball.style.width = '22px';
-ball.style.height = '22px';
-ball.style.borderRadius = '50%';
-ball.style.background = 'radial-gradient(circle at 25% 25%, #fff, #90ffa8)';
-ball.style.border = '2px solid rgba(0,200,100,0.9)';
-ball.style.boxShadow = '0 8px 24px rgba(0,0,0,0.18)';
-ball.style.transition = 'top 1.6s cubic-bezier(.2,.9,.3,1), left 1.6s linear';
-ball.style.zIndex = 999;
-document.body.appendChild(ball);
-ball.style.display = 'none';
-
-function showPopup(text){
-  popup.innerText = text;
-  popup.style.display = 'block';
-  setTimeout(()=>{ popup.style.display = 'none'; }, 2800);
+function roundRect(ctx, x, y, w, h, r, fill, stroke){
+  if (typeof stroke === 'undefined') stroke = true;
+  if (typeof r === 'undefined') r = 5;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+  if (fill) ctx.fill();
+  if (stroke) ctx.stroke();
 }
 
-// animate ball to slot label (slotLabel from server)
-function slotToLeftPercent(slotLabel){
-  const map = { 'LOSE':0.05, '10':0.14, '20':0.26, '50':0.38, '100':0.50, '200':0.62, '500':0.74, '1000':0.86, 'JACKPOT':0.95 };
-  return (map[slotLabel] || 0.5);
-}
-function animateBallToSlot(slotLabel){
-  return new Promise(resolve=>{
-    // position ball at top center of canvas
-    const rect = canvas.getBoundingClientRect();
-    const leftPct = slotToLeftPercent(slotLabel);
-    const targetLeft = rect.left + leftPct * rect.width;
-    const startLeft = rect.left + rect.width/2;
-    ball.style.left = (startLeft - 11) + 'px';
-    ball.style.top = (rect.top + 12) + 'px';
-    ball.style.display = 'block';
-    // play tap sound a few times to mimic peg hits
-    sTap.play();
-
-    // move to target
-    setTimeout(()=> {
-      ball.style.left = (targetLeft - 11) + 'px';
-      ball.style.top = (rect.top + rect.height - 110) + 'px';
-    }, 80);
-
-    // finish
-    setTimeout(()=> {
-      // tiny bounce
-      ball.style.top = (rect.top + rect.height - 130) + 'px';
-      setTimeout(()=> {
-        ball.style.display = 'none';
-        resolve();
-      }, 300);
-    }, 1800);
-  });
+// simple confetti (small)
+function showConfetti(){
+  // lightweight confetti: create a few colored rectangles flying up
+  const overlay = document.createElement('div');
+  overlay.style.position='fixed';
+  overlay.style.left='0';
+  overlay.style.top='0';
+  overlay.style.width='100%';
+  overlay.style.height='100%';
+  overlay.style.pointerEvents='none';
+  document.body.appendChild(overlay);
+  const colors = ['#ffd700','#ff4d4f','#00e676','#00b0ff','#ff6ec7'];
+  for(let i=0;i<60;i++){
+    const el = document.createElement('div');
+    el.style.position='absolute';
+    el.style.left = (50 + (Math.random()-0.5)*60) + '%';
+    el.style.top = (Math.random()*20) + '%';
+    el.style.width = '8px';
+    el.style.height = '14px';
+    el.style.transform = `rotate(${Math.random()*360}deg)`;
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.opacity = '0.95';
+    el.style.borderRadius = '2px';
+    overlay.appendChild(el);
+    (function(e){
+      setTimeout(()=>{ e.style.transition='transform 1s ease, top 1s ease, opacity 1s'; e.style.top = '110%'; e.style.opacity='0'; }, 40 + Math.random()*800);
+      setTimeout(()=> e.remove(), 1600 + Math.random()*800);
+    })(el);
+  }
+  setTimeout(()=> overlay.remove(), 2200);
 }
 
-// play action: call server, animate, update balance
-playBtn.addEventListener('click', async ()=>{
-  const bet = Number(betInput.value || 0);
-  if(!bet || bet <= 0) return alert('Enter bet > 0');
-  if((user.balance || 0) < bet) return alert('Insufficient balance');
+// ---------- Play logic ----------
+dropBtn.addEventListener('click', async () => {
+  if(isAnimating) return;
+  const bet = Number(betInput.value);
+  if(!bet || bet <= 0){
+    alert('Enter a valid bet amount (positive)');
+    return;
+  }
 
-  // immediate local deduction (optimistic)
-  user.balance = Number(user.balance || 0) - bet;
-  balanceDisplay.innerText = '$' + Number(user.balance).toLocaleString();
+  dropBtn.disabled = true;
+  isAnimating = true;
+  resultBox.innerText = 'Playing…';
+  playSound(sndTap);
 
-  // call backend: server decides slot
-  try{
-    const r = await fetch(`${API}/api/play`, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ userId: user.id, betAmount: bet })
+  // request server to play
+  try {
+    const res = await fetch(`${API_BASE}/api/play`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id, bet: bet })
     });
-    const j = await r.json();
-    if(!j.ok){
-      showPopup(j.error || 'Error');
-      // refresh user data
-      await refreshUser();
+
+    const data = await res.json();
+    if(!data || !data.ok){
+      // gracefully show server error
+      resultBox.innerText = data && data.error ? `Error: ${data.error}` : 'Server error during play.';
+      isAnimating = false;
+      dropBtn.disabled = false;
       return;
     }
 
-    // animate to server slot
-    const slotLabel = j.result.slotLabel;
-    await animateBallToSlot(slotLabel);
+    // play animation and show result
+    const winAmount = Number(data.win || 0);
+    const isJackpot = !!data.isJackpot;
+    await animateDrop(winAmount, isJackpot);
 
-    // play appropriate sounds
-    if(slotLabel === 'LOSE'){
-      sLose.play();
-      showPopup('You lost');
-    } else if(slotLabel === 'JACKPOT'){
-      sJackpot.play();
-      setTimeout(()=> sClap.play(), 900);
-      showPopup('🎉 JACKPOT! +$4,000');
-      // confetti (cdn)
-      try {
-        // load confetti via CDN then fire
-        if(!window.confetti){
-          const s = document.createElement('script');
-          s.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
-          document.head.appendChild(s);
-          s.onload = ()=> window.confetti({ particleCount: 200, spread: 70, origin: { y: 0.4 }});
-        } else {
-          window.confetti({ particleCount: 200, spread: 70, origin: { y: 0.4 }});
-        }
-      } catch(e){ /* ignore */ }
+    // play sound and confetti
+    if(isJackpot){
+      playSound(sndJackpot);
+      setTimeout(()=> playSound(sndClap), 600);
+      showConfetti();
+    } else if(winAmount > 0){
+      playSound(sndWin);
     } else {
-      sWin.play();
-      showPopup(`You won $${j.result.winAmount}`);
+      playSound(sndLose);
     }
 
-    // update local user from server truth
-    user.balance = j.result.balance;
-    saveUser(user);
-    refreshUI();
+    // update local UI from server-returned balance
+    if(typeof data.balance !== 'undefined'){
+      balanceDisplay.innerText = `$${Number(data.balance).toFixed(0)}`;
+      // update our stored user
+      user.balance = data.balance;
+      saveUser(user);
+    } else {
+      // fallback refresh
+      await refreshUser();
+    }
+
+    // show nicely formatted result
+    if(isJackpot){
+      resultBox.innerHTML = `<b>JACKPOT!</b> You were awarded $${data.jackpotAward || 4000}. Congratulations!`;
+      canWithdraw = true;
+      withdrawBtn.disabled = false;
+    } else if(winAmount > 0){
+      resultBox.innerHTML = `You won $${winAmount}! ${data.message || ''}`;
+    } else {
+      resultBox.innerText = `No win this time. ${data.message || ''}`;
+    }
 
   } catch(err){
-    console.error(err);
-    showPopup('Network error');
-    await refreshUser();
+    console.error('play err', err);
+    resultBox.innerText = 'Network/server error — try again.';
+  } finally {
+    isAnimating = false;
+    setTimeout(()=> { dropBtn.disabled = false; }, 700);
   }
 });
 
-// refresh user from API
-async function refreshUser(){
-  try{
-    const r = await fetch(`${API}/api/user/${user.id}`);
-    const j = await r.json();
-    if(j.ok && j.user){
-      user = j.user;
-      saveUser(user);
-      refreshUI();
+// animate ball drop — we keep it deterministic for a given win amount when known
+// If server returned winAmount, we align final slot to match winning (best-effort)
+function animateDrop(winAmount, isJackpot){
+  return new Promise((resolve) => {
+    const w = canvas.width/(window.devicePixelRatio||1);
+    const h = canvas.height/(window.devicePixelRatio||1);
+
+    // pick a target slot index based on result:
+    // amounts array must match labels: ['LOSE', 10,20,50,100,200,500,1000,'JACKPOT']
+    const amounts = ['LOSE', 10, 20, 50, 100, 200, 500, 1000, 'JACKPOT'];
+    let slotIndex = 0;
+    if(isJackpot) slotIndex = amounts.length - 1;
+    else if(winAmount && winAmount > 0){
+      // find slot with that numeric amount
+      const idx = amounts.findIndex(a => Number(a) === Number(winAmount));
+      slotIndex = idx >= 0 ? idx : Math.floor(Math.random() * (amounts.length - 1));
+    } else {
+      // lost -> random leftmost or rightmost lose (index 0)
+      slotIndex = 0;
     }
-  }catch(e){ console.warn('refresh fail', e); }
+
+    // compute slot geometry
+    const slotCount = amounts.length;
+    const slotWidth = (w - (board.leftPadding*2)) / slotCount;
+    const startX = w/2;
+    const startY = 12;
+    const endX = board.leftPadding + slotIndex * slotWidth + slotWidth/2;
+    const endY = board.topPadding + board.rows * board.pegSpacingY + 40;
+
+    // ball
+    let ball = { x: startX, y: startY, vx: 0, vy: 0, r: 10 };
+    const gravity = 0.5;
+
+    // simple "random walk" then target snap
+    let ticks = 0;
+    const maxTicks = 120;
+    const id = setInterval(() => {
+      ticks++;
+      // before snapping, do a jitter path
+      if(ticks < maxTicks - 20){
+        // small random walk and gravity
+        ball.vy += gravity;
+        // sideways pseudo-random
+        ball.vx += (Math.random() - 0.5) * 1.8;
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+
+        // keep inside
+        if(ball.x < board.leftPadding) ball.x = board.leftPadding;
+        if(ball.x > w - board.leftPadding) ball.x = w - board.leftPadding;
+        if(ball.y > endY - 10) ball.y = endY - 10;
+      } else {
+        // move toward final slot
+        const dx = endX - ball.x;
+        const dy = endY - ball.y;
+        ball.x += dx * 0.18;
+        ball.y += dy * 0.18;
+      }
+
+      // draw
+      drawBoard();
+      // draw ball
+      ctx.beginPath();
+      ctx.fillStyle = '#ffdf5c';
+      ctx.ellipse(ball.x, ball.y, ball.r, ball.r, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#ffb400';
+      ctx.stroke();
+
+      if(ticks > maxTicks + 30){
+        clearInterval(id);
+        resolve();
+      }
+    }, 16);
+  });
 }
 
-// withdraw button: show lock message if not jackpot
-withdrawBtn.addEventListener('click', async ()=>{
-  if(!user.hasWonBigBonus) {
-    alert('Withdrawals are locked until you win the JACKPOT. Keep playing!');
+// withdraw button click
+withdrawBtn.addEventListener('click', ()=>{
+  if(!canWithdraw){
+    alert('Withdrawals are locked until JACKPOT is unlocked. Please play until jackpot awarded.');
     return;
   }
-  // open withdraw flow (simple prompt for demo)
-  const amount = Number(prompt('Enter withdraw amount'));
-  if(!amount || amount <= 0) return;
-  if(amount > user.balance) return alert('Insufficient balance');
-  // call withdraw endpoint
-  const r = await fetch(`${API}/api/withdraw`, {
-    method:'POST',
-    headers:{ 'Content-Type':'application/json' },
-    body: JSON.stringify({ userId: user.id, amount: amount, method: 'local', details: '' })
-  });
-  const j = await r.json();
-  if(!j.ok) return alert('Withdraw failed: ' + (j.error || ''));
-  alert('Withdraw request submitted. Admin will process it.');
-  await refreshUser();
+  // if we allowed withdraw, open withdraw page or call withdraw popup; to avoid accidental actions we'll link to withdraw page
+  location.href = 'withdraw.html';
 });
 
-// initial UI
-refreshUI();
+// small helper to format money
+function fmtMoney(n){ return `$${Number(n||0).toFixed(0)}`; }
