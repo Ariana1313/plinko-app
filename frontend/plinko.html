@@ -6,13 +6,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    /* small extra styles for canvas layout */
-    .play-area { display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; }
-    #boardWrap { flex:1; min-width:280px; }
-    #board { width:100%; height:520px; background:#ffffff; border-radius:12px; border:1px solid rgba(0,0,0,0.06);}
-    .side-panel{ width:300px; max-width:100%; }
-    .balance { font-size:22px; font-weight:800; color:#0b6610; }
-    .small { color:#666; font-size:13px; }
+    /* local additions so you don't miss them */
+    .top-info{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;gap:12px}
+    .profile{display:flex;align-items:center;gap:10px}
+    .profile-pic{width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid rgba(0,255,102,0.85)}
+    .profile-name{font-weight:800;font-size:18px;color:#05283a}
+    .balance-card{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+    .balance-amount{font-weight:900;color:#0a7f52;font-size:20px}
+    .play-wrapper{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+    .left-area{flex:1;min-width:320px}
+    .right-area{width:320px}
+    #board{width:100%;height:520px;border-radius:14px;background:#f7fff7;border:1px solid rgba(0,0,0,0.04);box-shadow:0 18px 60px rgba(0,0,0,0.08)}
+    .control-card{background:#fff;padding:14px;border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,0.04)}
+    .popup{position:fixed;left:50%;transform:translateX(-50%);bottom:26px;background:linear-gradient(90deg,#00ff66,#00c853);color:#012;padding:10px 16px;border-radius:10px;display:none;z-index:9999}
   </style>
 </head>
 <body class="neon-page">
@@ -27,31 +33,53 @@
   </header>
 
   <main class="container">
-    <div class="play-area">
-      <div id="boardWrap">
-        <canvas id="board" width="600" height="520"></canvas>
+    <div class="top-info">
+      <div class="profile">
+        <img id="profilePic" class="profile-pic" src="assets/default-avatar.png" alt="">
+        <div>
+          <div class="profile-name" id="profileName">Player</div>
+          <div class="small">ID: <span id="userIdShort"></span></div>
+        </div>
       </div>
 
-      <aside class="side-panel">
-        <div class="card">
-          <div>Balance</div>
-          <div class="balance" id="balanceDisplay">$0</div>
-          <div class="small">Bet amount:</div>
-          <input id="betInput" type="number" value="10" min="1" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd">
-          <button class="btn" id="playBtn" style="margin-top:10px">Drop Ball</button>
-          <div class="small-note" style="margin-top:10px">Win amounts depend on slot the ball lands in. Reach $2,000 cumulative wins → you get a $4,000 big bonus automatically.</div>
-          <hr>
-          <div class="small">Referral link</div>
-          <input id="refLink" readonly style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;margin-top:6px">
-          <button class="btn small" id="copyRef" style="margin-top:8px">Copy Referral</button>
-          <hr>
-          <div id="message" class="small"></div>
+      <div class="balance-card">
+        <div class="small">Balance</div>
+        <div class="balance-amount" id="balanceDisplay">$0</div>
+      </div>
+    </div>
+
+    <div class="play-wrapper">
+      <div class="left-area">
+        <canvas id="board" width="900" height="520"></canvas>
+        <div id="message" style="margin-top:10px;color:#333;font-weight:700"></div>
+      </div>
+
+      <aside class="right-area">
+        <div class="control-card">
+          <label for="betInput">Bet amount</label>
+          <input id="betInput" type="number" min="1" value="10" />
+          <button id="playBtn" class="btn" style="margin-top:10px">Drop Ball</button>
+
+          <div style="margin-top:12px">
+            <div class="small">Referral link</div>
+            <input id="referralInput" readonly style="padding:8px;border-radius:8px;border:1px solid #ddd;width:100%;margin-top:6px">
+            <button id="copyReferral" class="btn small" style="margin-top:8px">Copy Referral</button>
+          </div>
+
+          <div style="margin-top:12px">
+            <button id="withdrawBtn" class="btn small ghost">Withdraw</button>
+          </div>
+
+          <p class="small-note" style="margin-top:12px">Reach $2,000 cumulative wins to unlock JACKPOT. JACKPOT awards $4,000 and enables withdrawals.</p>
         </div>
       </aside>
     </div>
+
   </main>
 
-  <footer class="footer">© 2025 Plinko N.U</footer>
+  <div class="footer">© 2025 Plinko N.U</div>
+
+  <div class="popup" id="popup"></div>
 
   <script src="js/auth.js"></script>
   <script src="js/plinko.js"></script>
