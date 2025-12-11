@@ -1,21 +1,17 @@
 // frontend/js/plinko.js
-// Plinko frontend logic matched to backend response:
-// POST /api/play  -> { ok, balance, win, isJackpot, jackpotAward, message }
-const API = "https://plinko-app-1qv9.onrender.com";
+// Plinko behavior: loads user, refreshes user from server, sends POST /api/play { userId, bet }
 
-const user = JSON.parse(localStorage.getItem("plinkoUser"));
-if (!user) {
-  window.location.href = "login.html";
-}
-// Helpers from your auth.js (should exist)
-function getUserSafe(){
+const API = "https://plinko-app.onrender.com";
+
+// small localStorage helpers
+function getUser(){
   try { return JSON.parse(localStorage.getItem('plinkoUser') || 'null'); }
   catch(e){ return null; }
 }
-function saveUserSafe(u){ localStorage.setItem('plinkoUser', JSON.stringify(u)); }
-function logoutSafe(){ localStorage.removeItem('plinkoUser'); location.href = 'login.html'; }
+function saveUser(u){ try { localStorage.setItem('plinkoUser', JSON.stringify(u)); } catch(e){} }
+function logout(){ localStorage.removeItem('plinkoUser'); location.href = 'login.html'; }
 
-// DOM references
+// DOM
 const profilePic = document.getElementById('profilePic');
 const usernameDisplay = document.getElementById('usernameDisplay');
 const userIdSmall = document.getElementById('userIdSmall');
@@ -34,127 +30,127 @@ const sndJackpot = document.getElementById('sndJackpot');
 const sndTap = document.getElementById('sndTap');
 const sndClap = document.getElementById('sndClap');
 
-function safePlaySound(audioEl){
-  try{ audioEl.currentTime = 0; audioEl.play(); } catch(e){}
+function playSound(el){
+  try { el.currentTime = 0; el.play(); } catch(e){}
 }
 
 // load user
-let user = getUserSafe();
+let user = getUser();
 if(!user){
-  // not logged in -> redirect to login
   location.href = 'login.html';
 } else {
   populateHeader();
-  refreshUser(); // get the freshest data from server
+  refreshUser(); // get latest from server
 }
 
 function populateHeader(){
   usernameDisplay.innerText = user.username || 'Player';
   userIdSmall.innerText = user.id ? `ID: ${user.id.slice(0,8)}` : '';
   if(user.profileUrl){
-    // profileUrl might be a relative path; make absolute if it starts with /
-    profilePic.src = user.profileUrl.startsWith('/') ? (API_BASE + user.profileUrl) : user.profileUrl;
+    profilePic.src = user.profileUrl.startsWith('/') ? (API + user.profileUrl) : user.profileUrl;
   } else {
     profilePic.src = 'assets/default-avatar.png';
   }
-  balanceDisplay.innerText = `$${Number(user.balance || 0).toLocaleString()}`;
+  balanceDisplay.innerText = `$${Number(user.balance || 0).toFixed(0)}`;
   referralInput.value = `${location.origin}/register.html?ref=${user.referralCode || ''}`;
   withdrawBtn.disabled = !(user.jackpotUnlocked || user.jackpotAwarded || user.hasWonBigBonus);
   withdrawBtn.innerText = withdrawBtn.disabled ? 'Withdraw (locked)' : 'Withdraw';
 }
 
 // copy referral
-copyRefBtn.addEventListener('click', async () => {
+copyRefBtn?.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(referralInput.value);
     copyRefBtn.innerText = 'Copied ✓';
-    setTimeout(()=> copyRefBtn.innerText = 'Copy', 1600);
+    setTimeout(()=> copyRefBtn.innerText = 'Copy', 1400);
   } catch(e){
-    alert('Copy failed: ' + (e.message || e));
+    alert('Copy failed');
   }
 });
 
 // logout
-logoutBtn?.addEventListener('click', () => logoutSafe());
+logoutBtn?.addEventListener('click', logout);
 
-// refresh latest user from server
+// refresh user from server
 async function refreshUser(){
-  try{
-    const resp = await fetch(`${API_BASE}/api/user/${user.id}`);
-    const j = await resp.json();
+  try {
+    const r = await fetch(`${API}/api/user/${user.id}`);
+    const j = await r.json();
     if(j && j.ok && j.user){
       user = j.user;
-      saveUserSafe(user);
+      saveUser(user);
       populateHeader();
-    } else {
-      console.warn('refreshUser no data', j);
     }
-  }catch(e){
-    console.warn('refreshUser err', e);
-  }
+  } catch(e){ console.warn('refreshUser err', e); }
 }
 
-// Canvas board + animation utilities
+// -- Canvas & board drawing (keeps visuals) --
 const canvas = document.getElementById('plinkoCanvas');
 const ctx = canvas.getContext('2d');
 
-function resizeCanvas(){
+function setCanvasSize(){
   const rect = canvas.getBoundingClientRect();
   const ratio = window.devicePixelRatio || 1;
-  canvas.width = Math.round(rect.width * ratio);
-  canvas.height = Math.round(rect.height * ratio);
+  canvas.width = Math.floor(rect.width * ratio);
+  canvas.height = Math.floor(rect.height * ratio);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 }
-window.addEventListener('resize', () => { resizeCanvas(); drawBoard(); });
+setCanvasSize();
+window.addEventListener('resize', () => { setCanvasSize(); drawBoard(); });
 
-const boardConfig = {
-  rows: 6,
+const board = {
   cols: 8,
+  rows: 6,
   pegRadius: 6,
-  leftPadding: 36,
-  topPadding: 36,
   pegSpacingX: 62,
-  pegSpacingY: 60
+  pegSpacingY: 60,
+  leftPadding: 36,
+  topPadding: 36
 };
 
 function drawBoard(){
-  // clear
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  // un-high DPI adjusted width/height
-  const w = canvas.width / (window.devicePixelRatio || 1);
-  const h = canvas.height / (window.devicePixelRatio || 1);
-
-  // background
+  const w = canvas.width/(window.devicePixelRatio||1);
+  const h = canvas.height/(window.devicePixelRatio||1);
   ctx.fillStyle = '#f7fff7';
   roundRect(ctx, 0, 0, w, h, 12, true, false);
 
-  // pegs
   ctx.fillStyle = '#00c853';
-  for(let r=0;r<boardConfig.rows;r++){
-    const y = boardConfig.topPadding + r * boardConfig.pegSpacingY;
-    for(let c=0;c<=boardConfig.cols;c++){
-      const offsetX = (r % 2) ? boardConfig.pegSpacingX/2 : 0;
-      const x = boardConfig.leftPadding + offsetX + c * boardConfig.pegSpacingX;
+  for(let r=0;r<board.rows;r++){
+    const y = board.topPadding + r * board.pegSpacingY;
+    for(let c=0;c<=board.cols;c++){
+      const offset = (r % 2) ? board.pegSpacingX/2 : 0;
+      const x = board.leftPadding + offset + c * board.pegSpacingX;
       ctx.beginPath();
-      ctx.ellipse(x, y, boardConfig.pegRadius, boardConfig.pegRadius*0.9, 0, 0, Math.PI*2);
+      ctx.ellipse(x, y, board.pegRadius, board.pegRadius*0.85, 0, 0, Math.PI*2);
       ctx.fill();
     }
   }
 
-  // bottom slots
-  const slotCount = boardConfig.cols + 1;
-  const slotW = (w - boardConfig.leftPadding*2) / slotCount;
-  const bottomY = boardConfig.topPadding + boardConfig.rows * boardConfig.pegSpacingY + 36;
-  ctx.fillStyle = '#fff';
+  const slotCount = board.cols + 1;
+  const slotWidth = (w - (board.leftPadding*2)) / slotCount;
+  const bottomY = board.topPadding + board.rows * board.pegSpacingY + 48;
   for(let i=0;i<slotCount;i++){
-    const x = boardConfig.leftPadding + i*slotW;
-    ctx.fillRect(x, bottomY, slotW - 6, 64);
+    const x = board.leftPadding + i*slotWidth;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(x, bottomY, slotWidth-6, 64);
     ctx.strokeStyle = 'rgba(0,0,0,0.04)';
-    ctx.strokeRect(x, bottomY, slotW - 6, 64);
+    ctx.strokeRect(x, bottomY, slotWidth-6, 64);
   }
-  // labels (client side label element already created in html)
+
+  // inject labels (client)
+  const labelsEl = document.getElementById('slotLabels');
+  if(labelsEl){
+    labelsEl.innerHTML = '';
+    const amounts = ['LOSE', 10, 20, 50, 100, 200, 500, 1000, 'JACKPOT'];
+    amounts.forEach(a => {
+      const div = document.createElement('div');
+      div.className = 'slot';
+      div.innerText = typeof a === 'number' ? `$${a}` : a;
+      labelsEl.appendChild(div);
+    });
+  }
 }
-resizeCanvas();
 drawBoard();
 
 function roundRect(ctx, x, y, w, h, r, fill, stroke){
@@ -171,132 +167,115 @@ function roundRect(ctx, x, y, w, h, r, fill, stroke){
   if (stroke) ctx.stroke();
 }
 
-// Play flow
-let playing = false;
+// result / play logic
+let isPlaying = false;
 dropBtn.addEventListener('click', async () => {
-  if(playing) return;
+  if(isPlaying) return;
   const bet = Number(betInput.value);
   if(!bet || bet <= 0){
-    alert('Enter a valid bet (>0).');
+    alert('Enter a valid bet amount');
     return;
   }
 
-  // Show a little UI feedback and disable button
-  playing = true;
+  isPlaying = true;
   dropBtn.disabled = true;
   resultBox.innerText = 'Playing…';
-  safePlaySound(sndTap);
+  playSound(sndTap);
 
-  try{
-    // Call server: server enforces balance and returns final result
-    const r = await fetch(`${API_BASE}/api/play`, {
+  try {
+    const res = await fetch(`${API}/api/play`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: user.id, bet })
     });
-    const j = await r.json();
-    if(!j || !j.ok){
-      // server-side error (e.g., insufficient funds) — show message, refresh user
-      const msg = j && j.error ? j.error : 'Server error during play';
-      resultBox.innerText = `Error: ${msg}`;
+    const j = await res.json();
+
+    if(!res.ok || !j.ok){
+      resultBox.innerText = j && j.error ? `Error: ${j.error}` : 'Play failed';
       await refreshUser();
       return;
     }
 
-    // j: { ok, balance, win, isJackpot, jackpotAward, message }
-    // animate ball to slot that corresponds to win
+    // animate and show result
     const win = Number(j.win || 0);
-    const isJackpot = !!j.isJackpot;
-    await animateBallToResult(win, isJackpot);
+    const isJack = !!j.isJackpot;
+    await animateDrop(win, isJack);
 
-    // play sounds & show confetti on jackpot
-    if(isJackpot){
-      safePlaySound(sndJackpot);
-      setTimeout(()=> safePlaySound(sndClap), 450);
+    if(isJack){
+      playSound(sndJackpot);
+      setTimeout(()=> playSound(sndClap), 450);
       showConfetti();
     } else if(win > 0){
-      safePlaySound(sndWin);
+      playSound(sndWin);
     } else {
-      safePlaySound(sndLose);
+      playSound(sndLose);
     }
 
-    // update UI with server-authoritative balance
+    // update user & UI from server-authoritative response
     user.balance = Number(j.balance || 0);
-    saveUserSafe(user);
+    if(j.jackpotAward && j.jackpotAward > 0){
+      user.jackpotAwarded = true;
+      user.jackpotUnlocked = true;
+    }
+    saveUser(user);
     populateHeader();
 
-    // result display
-    if(isJackpot){
-      resultBox.innerHTML = `<strong>JACKPOT!</strong> You were awarded $${j.jackpotAward || 4000}. Congratulations!`;
-      // enable withdraw
+    if(isJack){
+      resultBox.innerHTML = `<b>JACKPOT!</b> You were awarded $${j.jackpotAward || 4000}.`;
       withdrawBtn.disabled = false;
-      withdrawBtn.innerText = 'Withdraw';
     } else if(win > 0){
-      resultBox.innerText = `You won $${win}. ${j.message || ''}`;
+      resultBox.innerText = `You won $${win}!`;
     } else {
-      resultBox.innerText = `No win this time. ${j.message || ''}`;
+      resultBox.innerText = 'No win this time.';
     }
-
-  } catch(err){
-    console.error('play error', err);
-    resultBox.innerText = 'Network error. Try again.';
+  } catch(e){
+    console.error('play error', e);
+    resultBox.innerText = 'Network error — try again.';
     await refreshUser();
   } finally {
-    playing = false;
-    setTimeout(()=> { dropBtn.disabled = false; }, 600);
+    isPlaying = false;
+    setTimeout(()=> dropBtn.disabled = false, 800);
   }
 });
 
-// animate ball to server result (best-effort)
-function animateBallToResult(winAmount, isJackpot){
+function animateDrop(winAmount, isJackpot){
   return new Promise((resolve) => {
-    const w = canvas.width / (window.devicePixelRatio || 1);
-    const h = canvas.height / (window.devicePixelRatio || 1);
-
-    // slot mapping consistent with server slots:
-    // ['LOSE',10,20,50,100,200,500,1000,'JACKPOT']
-    const slots = ['LOSE',10,20,50,100,200,500,1000,'JACKPOT'];
-    let targetIndex = 0;
-    if(isJackpot) targetIndex = slots.length - 1;
-    else if(winAmount > 0){
-      const idx = slots.findIndex(s => Number(s) === Number(winAmount));
-      targetIndex = idx >= 0 ? idx : Math.floor((Math.random() * (slots.length-1)));
+    const w = canvas.width/(window.devicePixelRatio||1);
+    const slotDefs = ['LOSE',10,20,50,100,200,500,1000,'JACKPOT'];
+    let slotIndex = 0;
+    if(isJackpot) slotIndex = slotDefs.length - 1;
+    else if(winAmount && winAmount > 0){
+      const idx = slotDefs.findIndex(s => Number(s) === Number(winAmount));
+      slotIndex = idx >= 0 ? idx : Math.floor(Math.random()*(slotDefs.length-1));
     } else {
-      // if lose, bias to left-most (0) or near left
-      targetIndex = 0;
+      slotIndex = 0;
     }
 
-    const slotCount = slots.length;
-    const slotWidth = (w - boardConfig.leftPadding * 2) / slotCount;
-    const endX = boardConfig.leftPadding + targetIndex * slotWidth + slotWidth/2;
-    const endY = boardConfig.topPadding + boardConfig.rows * boardConfig.pegSpacingY + 40;
-    let ball = { x: w/2, y: 12, vx: 0, vy: 0, r: 10 };
+    const slotCount = slotDefs.length;
+    const slotWidth = (w - board.leftPadding*2) / slotCount;
+    const endX = board.leftPadding + slotIndex * slotWidth + slotWidth/2;
+    const endY = board.topPadding + board.rows * board.pegSpacingY + 40;
 
+    let ball = { x: w/2, y: 12, vx: 0, vy: 0, r: 10 };
     let frame = 0;
     const maxFrames = 140;
     const id = setInterval(() => {
       frame++;
-      // simple physics-ish random walk then snap to target
-      if(frame < maxFrames - 20){
+      if(frame < maxFrames - 18){
         ball.vy += 0.45;
-        ball.vx += (Math.random() - 0.5) * 1.6;
+        ball.vx += (Math.random() - 0.5) * 1.5;
         ball.x += ball.vx;
         ball.y += ball.vy;
-        // keep inside bounds
-        if(ball.x < boardConfig.leftPadding) ball.x = boardConfig.leftPadding;
-        if(ball.x > w - boardConfig.leftPadding) ball.x = w - boardConfig.leftPadding;
-        if(ball.y > endY - 10) ball.y = endY - 10;
+        if(ball.x < board.leftPadding) ball.x = board.leftPadding;
+        if(ball.x > w - board.leftPadding) ball.x = w - board.leftPadding;
       } else {
-        // ease toward endX/endY
         ball.x += (endX - ball.x) * 0.18;
         ball.y += (endY - ball.y) * 0.18;
       }
 
-      // render
       drawBoard();
-      // ball
       ctx.beginPath();
-      ctx.fillStyle = '#fff7c2';
+      ctx.fillStyle = '#ffdf5c';
       ctx.ellipse(ball.x, ball.y, ball.r, ball.r, 0, 0, Math.PI*2);
       ctx.fill();
       ctx.lineWidth = 3;
@@ -311,65 +290,55 @@ function animateBallToResult(winAmount, isJackpot){
   });
 }
 
-// small confetti visual (DOM based)
 function showConfetti(){
-  const fragment = document.createDocumentFragment();
-  const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.left = '0';
-  container.style.top = '0';
-  container.style.width = '100%';
-  container.style.height = '100%';
-  container.style.pointerEvents = 'none';
-  fragment.appendChild(container);
+  const overlay = document.createElement('div');
+  overlay.style.position='fixed';
+  overlay.style.left='0';
+  overlay.style.top='0';
+  overlay.style.width='100%';
+  overlay.style.height='100%';
+  overlay.style.pointerEvents='none';
+  document.body.appendChild(overlay);
   const colors = ['#ffd700','#ff4d4f','#00e676','#00b0ff','#ff6ec7'];
   for(let i=0;i<60;i++){
-    const p = document.createElement('div');
-    p.style.position = 'absolute';
-    p.style.left = (50 + (Math.random()-0.5)*60) + '%';
-    p.style.top = (Math.random()*20) + '%';
-    p.style.width = '8px';
-    p.style.height = '14px';
-    p.style.background = colors[Math.floor(Math.random()*colors.length)];
-    p.style.transform = `rotate(${Math.random()*360}deg)`;
-    p.style.borderRadius = '2px';
-    container.appendChild(p);
-    (function(el){
-      setTimeout(()=>{ el.style.transition = 'transform 1s ease, top 1s ease, opacity 1s'; el.style.top = '110%'; el.style.opacity = '0'; }, 40 + Math.random()*800);
-      setTimeout(()=> el.remove(), 1700 + Math.random()*800);
-    })(p);
+    const el = document.createElement('div');
+    el.style.position='absolute';
+    el.style.left = (50 + (Math.random()-0.5)*60) + '%';
+    el.style.top = (Math.random()*20) + '%';
+    el.style.width = '8px';
+    el.style.height = '14px';
+    el.style.transform = `rotate(${Math.random()*360}deg)`;
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.opacity = '0.95';
+    overlay.appendChild(el);
+    (function(e){ setTimeout(()=>{ e.style.transition='transform 1s ease, top 1s ease, opacity 1s'; e.style.top = '110%'; e.style.opacity='0'; }, 40 + Math.random()*800); setTimeout(()=> e.remove(), 1600 + Math.random()*800); })(el);
   }
-  document.body.appendChild(container);
-  setTimeout(()=> container.remove(), 2200);
+  setTimeout(()=> overlay.remove(), 2200);
 }
 
-// withdraw button behavior (locked until server allows)
-withdrawBtn.addEventListener('click', async () => {
-  // If locked, show info
-  if(!user.jackpotUnlocked && !user.jackpotAwarded && !user.hasWonBigBonus){
-    alert('Withdrawals are locked until you unlock the JACKPOT. Keep playing!');
+// withdraw behavior (simple)
+withdrawBtn?.addEventListener('click', async () => {
+  if(!(user.jackpotUnlocked || user.jackpotAwarded || user.hasWonBigBonus)){
+    alert('Withdrawals locked — win the jackpot to enable withdrawals.');
     return;
   }
-  // open withdraw page (or implement a quick prompt)
-  const amt = Number(prompt('Enter withdrawal amount'));
+  const amt = Number(prompt('Amount to withdraw'));
   if(!amt || amt <= 0) return;
   if(amt > (user.balance || 0)) return alert('Insufficient balance');
-  // send withdraw request
-  try{
-    const res = await fetch(`${API_BASE}/api/withdraw`, {
+  try {
+    const r = await fetch(`${API}/api/withdraw`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: user.id, amount: amt })
     });
-    const j = await res.json();
-    if(!j.ok) return alert('Withdraw failed: ' + (j.error || ''));
+    const j = await r.json();
+    if(!j.ok) return alert('Withdraw request failed: ' + (j.error || ''));
     alert('Withdraw request submitted. Admin will process it.');
     await refreshUser();
   } catch(e){
-    alert('Withdraw network error.');
-    console.error(e);
+    alert('Network error during withdraw.');
   }
 });
 
-// safe refresh interval (keep user balance current)
-setInterval(() => { if(user) refreshUser(); }, 45000);
+// periodic refresh
+setInterval(()=>{ if(user) refreshUser(); }, 45000);
