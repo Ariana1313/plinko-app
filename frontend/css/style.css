@@ -56,7 +56,22 @@ body{font-family:Inter,system-ui,Arial; background:var(--bg); color:var(--text);
   position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:0.9;width:20px;height:20px;display:flex;align-items:center;justify-content:center;
 }
 .small-note{font-size:13px;color:var(--muted);margin-top:6px}
-
+/* --- input icons alignment improvements --- */
+.field { position:relative; margin:10px 0; display:flex; align-items:center; }
+.field .icon { width:40px; display:flex; align-items:center; justify-content:center; font-size:18px; }
+.field input[type="text"], .field input[type="password"], .field input[type="email"], .field input[type="date"], .field select, .field input[type="file"] {
+  flex:1;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid rgba(0,0,0,0.08);
+  background:transparent;
+  font-size:15px;
+}
+.form-card h2 { margin-bottom:8px; }
+.site-header { position:fixed; top:0; left:0; right:0; height:64px; display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:#fff; border-bottom:1px solid rgba(0,0,0,0.04); z-index:1000;}
+.logo-card { width:44px; height:44px; object-fit:contain; margin-right:8px; }
+.container{ max-width:980px; margin:100px auto 120px; padding:16px; }
+.small-link { font-size:14px; padding:8px; color:#0b6; text-decoration:none; }
 /* PLINKO BOARD */
 .plinko-board{width:100%;height:460px;background:linear-gradient(180deg,#fff,rgba(0,255,102,0.02));border-radius:12px;border:1px dashed rgba(0,0,0,0.04);position:relative;overflow:hidden;margin-top:12px}
 .ball{position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #fff,#d4ffe0);border:2px solid rgba(0,255,102,0.9);box-shadow:0 6px 18px rgba(0,0,0,0.12)}
