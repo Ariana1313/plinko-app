@@ -1,7 +1,12 @@
 // frontend/js/plinko.js
 // Plinko frontend logic matched to backend response:
 // POST /api/play  -> { ok, balance, win, isJackpot, jackpotAward, message }
+const API = "https://plinko-app-1qv9.onrender.com";
 
+const user = JSON.parse(localStorage.getItem("plinkoUser"));
+if (!user) {
+  window.location.href = "login.html";
+}
 // Helpers from your auth.js (should exist)
 function getUserSafe(){
   try { return JSON.parse(localStorage.getItem('plinkoUser') || 'null'); }
