@@ -494,6 +494,11 @@ app.get('/api/admin/logs', requireAdmin, (req, res) => {
   }catch(e){ console.error('admin logs', e && e.message); return res.status(500).json({ ok:false, error:'server error' }); }
 });
 
+// HEALTH CHECK (Render uses this)
+app.get('/api/health', (req, res) => {
+  return res.status(200).json({ ok: true, status: 'UP' });
+});
+
 // Catch-all API error handler
 app.use('/api/*', (req, res) => {
   return res.status(404).json({ ok:false, error: 'Not found' });
