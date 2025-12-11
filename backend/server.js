@@ -1,13 +1,12 @@
 // backend/server.js
-// Full Plinko backend (JSON storage) with referrals, jackpot and withdrawal lock.
-// Required env vars (set them in Render/Vercel): FRONTEND_ORIGIN, SESSION_SECRET, ADMIN_PASSWORD (opt),
-// TELEGRAM_BOT_TOKEN (opt), TELEGRAM_CHAT_ID (opt)
+// Final Plinko backend — server-authoritative play + jackpot + referral + withdraw lock
+// Env vars to set: FRONTEND_ORIGIN, SESSION_SECRET, ADMIN_PASSWORD (opt), TELEGRAM_BOT_TOKEN (opt), TELEGRAM_CHAT_ID (opt)
 
 require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const bcrypt = require('bcryptjs'); // bcryptjs for easier deploy
+const bcrypt = require('bcryptjs');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const cors = require('cors');
@@ -21,47 +20,44 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- Storage files ---
+// --- Files & storage ---
 const BASE = __dirname;
 const USERS_FILE = path.join(BASE, 'users.json');
 const WITHDRAW_FILE = path.join(BASE, 'withdrawals.json');
 const ADMIN_LOGS = path.join(BASE, 'admin_logs.json');
 const JACKPOT_FILE = path.join(BASE, 'jackpot.json');
 
-// Ensure files exist
 if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, '[]', 'utf8');
 if (!fs.existsSync(WITHDRAW_FILE)) fs.writeFileSync(WITHDRAW_FILE, '[]', 'utf8');
 if (!fs.existsSync(ADMIN_LOGS)) fs.writeFileSync(ADMIN_LOGS, '[]', 'utf8');
 if (!fs.existsSync(JACKPOT_FILE)) fs.writeFileSync(JACKPOT_FILE, JSON.stringify({ amount: 4000, awarded: [] }, null, 2), 'utf8');
 
-// --- Helpers to read/write JSON ---
 function readJSON(file) {
   try { return JSON.parse(fs.readFileSync(file, 'utf8') || '[]'); }
-  catch(e){ return []; }
+  catch (e) { return []; }
 }
 function writeJSON(file, obj) { fs.writeFileSync(file, JSON.stringify(obj, null, 2), 'utf8'); }
 
-// Users helpers
 function readUsers(){ return readJSON(USERS_FILE); }
 function writeUsers(u){ writeJSON(USERS_FILE, u); }
-
-// Withdrawals & logs
 function readWithdrawals(){ return readJSON(WITHDRAW_FILE); }
 function writeWithdrawals(w){ writeJSON(WITHDRAW_FILE, w); }
+function readJackpot(){ return readJSON(JACKPOT_FILE); }
+function writeJackpot(j){ writeJSON(JACKPOT_FILE, j); }
 function logAdmin(action, details){
   const logs = readJSON(ADMIN_LOGS);
   logs.unshift({ at: new Date().toISOString(), action, details });
   writeJSON(ADMIN_LOGS, logs);
 }
-function readJackpot(){ return readJSON(JACKPOT_FILE); }
-function writeJackpot(j){ writeJSON(JACKPOT_FILE, j); }
 
-// --- File upload setup (profile pics and winner pics) ---
-const uploadDir = path.join(BASE,'uploads'); if(!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+// --- Uploads ---
+const uploadDir = path.join(BASE, 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 const upload = multer({ dest: uploadDir });
 
-// --- Security middleware ---
+// --- Security & CORS ---
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'https://plinko-app-nu.vercel.app';
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -75,10 +71,9 @@ app.use(helmet({
   }
 }));
 
-// Strict CORS: allow only front-end and allow non-browser (curl) when origin is undefined
 app.use(cors({
   origin: function(origin, callback){
-    if(!origin) return callback(null, true); // allow server-to-server / curl
+    if(!origin) return callback(null, true); // allow non-browser (curl)
     if(origin === FRONTEND_ORIGIN) return callback(null, true);
     return callback(new Error('CORS not allowed'));
   },
@@ -86,7 +81,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type','Authorization']
 }));
 
-// Rate limiter for /api routes
 const limiter = rateLimit({
   windowMs: 60*1000,
   max: 120,
@@ -94,7 +88,6 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Body parsing and sessions
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
@@ -104,57 +97,39 @@ app.use(session({
   cookie: { secure: process.env.NODE_ENV === 'production', httpOnly: true }
 }));
 
-// Static upload access
 app.use('/uploads', express.static(uploadDir));
 
-// Simple root
 app.get('/', (req, res) => res.status(200).send('Plinko API — running'));
 
 // --- Utilities ---
 function makeReferralCode(){
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let s = '';
   for(let i=0;i<6;i++) s += chars.charAt(Math.floor(Math.random()*chars.length));
   return 'REF-' + s;
 }
 
-// Telegram Notifications
+// Telegram notifications (reads token & chat id from env vars)
 async function telegramNotify(text, photoPath){
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
-
-  if (!token || !chatId) return;
-
-  try {
-    // Send text message
+  if(!token || !chatId) return;
+  try{
     await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: 'HTML'
-      })
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
     });
-
-    // Send photo (optional)
-    if (photoPath && fs.existsSync(photoPath)) {
+    if(photoPath && fs.existsSync(photoPath)){
       const form = new FormData();
       form.append('chat_id', chatId);
       form.append('photo', fs.createReadStream(photoPath));
-
-      await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
-        method:'POST',
-        body: form
-      });
+      await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, { method:'POST', body: form });
     }
-
-  } catch (e) {
-    console.error('Telegram error:', e.message);
-  }
+  }catch(e){ console.error('Telegram error', e && e.message); }
 }
 
-// --- Anti-multi heuristics (simple) ---
+// simple anti-multi check (phone/ip/ua)
 function checkAntiMulti(req, email, username, phone){
   const users = readUsers();
   const ip = (req.headers['x-forwarded-for'] || req.connection.remoteAddress || '').split(',')[0].trim();
@@ -171,15 +146,15 @@ function checkAntiMulti(req, email, username, phone){
   return { blocked:false };
 }
 
-// --- ADMIN auth middleware ---
+// admin check
 function requireAdmin(req, res, next){
   if(req.session && req.session.isAdmin) return next();
   return res.status(401).json({ error: 'admin required' });
 }
 
-// -------------------- API ROUTES --------------------
+// -------------------- API --------------------
 
-// REGISTER (multipart/form-data) - gives $150 welcome bonus
+// REGISTER
 app.post('/api/register', upload.single('profilePic'), async (req, res) => {
   try{
     const body = req.body || {};
@@ -188,7 +163,6 @@ app.post('/api/register', upload.single('profilePic'), async (req, res) => {
 
     if(!username || !email || !password || !secretPin) return res.status(400).json({ ok:false, error: 'Missing required fields' });
 
-    // anti-multi checks
     const anti = checkAntiMulti(req, email, username, phone);
     if(anti.blocked) return res.status(403).json({ ok:false, error: 'Registration blocked: ' + anti.reason });
 
@@ -200,7 +174,6 @@ app.post('/api/register', upload.single('profilePic'), async (req, res) => {
     let profileUrl = null;
     if(req.file) profileUrl = `/uploads/${path.basename(req.file.path)}`;
 
-    // unique referral for new user
     let myReferral = makeReferralCode();
     while(users.find(u => u.referralCode === myReferral)) myReferral = makeReferralCode();
 
@@ -217,34 +190,30 @@ app.post('/api/register', upload.single('profilePic'), async (req, res) => {
       birthday: birthday || '',
       address: address || '',
       profileUrl,
-      balance: 150,              // <-- $150 welcome bonus
-      cumulativeWins: 0,        // tracks total wins toward jackpot
-      jackpotAwarded: false,    // whether big $4k was awarded
-      jackpotUnlocked: false,   // whether user allowed to withdraw (per your rule)
+      balance: 150,               // welcome bonus
+      cumulativeWins: 0,         // sum of wins only
+      jackpotAwarded: false,     // whether big 4k awarded
+      jackpotUnlocked: false,    // allow withdrawals after big award
       hasWonBigBonus: false,
       createdAt: new Date().toISOString(),
 
-      // referral fields
       referralCode: myReferral,
       referredBy: referralCode || null,
       referrals: [],
       referralEarned: 0,
 
-      // anti-multi tracking
       lastIp: req.headers['x-forwarded-for'] || req.connection.remoteAddress || '',
       lastUa: req.headers['user-agent'] || ''
     };
 
-    // store user first
     users.push(user);
 
-    // if referral used, credit referrer (idempotent)
     if(referralCode){
       const referrer = users.find(u => u.referralCode === referralCode);
       if(referrer && referrer.id !== user.id){
         const already = (referrer.referrals || []).find(r => r.email === user.email || r.username === user.username);
         if(!already){
-          referrer.balance = (referrer.balance || 0) + 30; // <-- $30 referral credit
+          referrer.balance = (referrer.balance || 0) + 30; // referral bonus
           referrer.referralEarned = (referrer.referralEarned || 0) + 30;
           referrer.referrals = referrer.referrals || [];
           referrer.referrals.push({ id: user.id, username: user.username, email: user.email, date: new Date().toISOString() });
@@ -254,7 +223,6 @@ app.post('/api/register', upload.single('profilePic'), async (req, res) => {
     }
 
     writeUsers(users);
-
     telegramNotify(`<b>New registration</b>\nUser: ${user.username}\nEmail: ${user.email}\nReferral used: ${referralCode || 'none'}`, req.file ? req.file.path : null);
 
     const { password:pw, secretPin:pin, ...publicUser } = user;
@@ -286,7 +254,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// RESET / FORGOT PASSWORD
+// RESET PASSWORD
 app.post('/api/reset-password', async (req, res) => {
   try{
     const { email, secretPin, newPassword } = req.body || {};
@@ -305,145 +273,6 @@ app.post('/api/reset-password', async (req, res) => {
   }
 });
 
-// ADD BONUS (admin / support)
-app.post('/api/add-bonus', (req, res) => {
-  try{
-    const { userId, amount } = req.body || {};
-    const users = readUsers(); const user = users.find(u => u.id === userId);
-    if(!user) return res.status(400).json({ ok:false, error: 'No user' });
-    user.balance = (user.balance || 0) + Number(amount || 0);
-    writeUsers(users);
-    return res.status(200).json({ ok:true, balance: user.balance });
-  }catch(e){
-    console.error('add-bonus', e && e.message);
-    return res.status(500).json({ ok:false, error: 'Server error' });
-  }
-});
-
-/*
-  PLAY endpoint
-  - Request: { userId, betAmount }
-  - Immediate deduction of bet
-  - Randomly pick slot
-  - Add win to user.balance if win
-  - Update cumulativeWins when user gets winnings (only wins)
-  - If cumulativeWins >= 2000 and not yet awarded -> award jackpot ($4000)
-  - Return JSON with outcome, newBalance, cumulativeWins, jackpotTriggered
-*/
-app.post('/api/play', (req, res) => {
-  try{
-    const { userId, betAmount } = req.body || {};
-    if(!userId || typeof betAmount === 'undefined') return res.status(400).json({ ok:false, error:'Missing fields' });
-    const bet = Number(betAmount);
-    if(isNaN(bet) || bet <= 0) return res.status(400).json({ ok:false, error:'Invalid bet' });
-
-    const users = readUsers();
-    const user = users.find(u => u.id === userId);
-    if(!user) return res.status(400).json({ ok:false, error:'User not found' });
-
-    // Prevent playing if blocked
-    if(user.blocked) return res.status(403).json({ ok:false, error:'User blocked' });
-
-    // Check balance
-    if((user.balance || 0) < bet) return res.status(400).json({ ok:false, error:'Insufficient balance' });
-
-    // Deduct bet immediately
-    user.balance = (user.balance || 0) - bet;
-
-    // Define Plinko slots left->right (common layout)
-    // We'll return the label used for client display
-    // Slot labels: LOSE,10,20,50,100,200,500,1000,JACKPOT(4000)
-    const slots = [
-      { label:'LOSE', amount: 0, multiplier: 0 },
-      { label:'$10', amount: 10, multiplier: null },
-      { label:'$20', amount: 20, multiplier: null },
-      { label:'$50', amount: 50, multiplier: null },
-      { label:'$100', amount: 100, multiplier: null },
-      { label:'$200', amount: 200, multiplier: null },
-      { label:'$500', amount: 500, multiplier: null },
-      { label:'$1000', amount: 1000, multiplier: null },
-      { label:'JACKPOT', amount: 4000, multiplier: null }
-    ];
-
-    // We choose outcome using weighted probabilities (tune as desired)
-    // Larger prizes should have very small chance
-    const weights = [40, 18, 12, 10, 8, 6, 3, 1, 0.2]; // sums ~98.2 : jackpot tiny
-    const totalWeight = weights.reduce((a,b)=>a+b,0);
-    const pick = Math.random() * totalWeight;
-    let acc = 0, idx = 0;
-    for(let i=0;i<weights.length;i++){
-      acc += weights[i];
-      if(pick <= acc){ idx = i; break; }
-    }
-    const outcome = slots[idx];
-
-    // For slots that pay fixed amounts, the winAmount is the slot amount
-    // For LOSE -> winAmount = 0
-    let winAmount = outcome.amount || 0;
-
-    // If jackpot explicitly hit (JACKPOT label)
-    let jackpotTriggered = false;
-    if(outcome.label === 'JACKPOT'){
-      jackpotTriggered = true;
-      winAmount = 4000;
-    }
-
-    // Credit winnings (if any)
-    if(winAmount > 0){
-      user.balance = (user.balance || 0) + Number(winAmount);
-
-      // Track cumulative wins (sum only wins)
-      user.cumulativeWins = (user.cumulativeWins || 0) + Number(winAmount);
-
-      // If cumulativeWins reached threshold 2000 and jackpot not awarded -> award $4,000
-      if((user.cumulativeWins || 0) >= 2000 && !user.jackpotAwarded){
-        user.jackpotAwarded = true;
-        user.jackpotUnlocked = true;    // allow withdrawals per your rule
-        user.balance = (user.balance || 0) + 4000; // award big bonus
-        telegramNotify(`<b>JACKPOT ACHIEVED</b>\nUser: ${user.username}\nAwarded $4000 big bonus!`);
-        // Save jackpot info file too
-        const j = readJackpot();
-        j.awarded = j.awarded || [];
-        j.awarded.push({ userId: user.id, username: user.username, at: new Date().toISOString(), amount: 4000 });
-        writeJackpot(j);
-      }
-    }
-
-    writeUsers(users);
-
-    // Return outcome
-    return res.status(200).json({
-      ok: true,
-      slotIndex: idx,
-      slotLabel: outcome.label,
-      winAmount,
-      newBalance: user.balance || 0,
-      cumulativeWins: user.cumulativeWins || 0,
-      jackpotTriggered: jackpotTriggered || false,
-      jackpotAwarded: !!user.jackpotAwarded,
-    });
-
-  }catch(e){
-    console.error('play err', e && e.message);
-    return res.status(500).json({ ok:false, error: 'Server error' });
-  }
-});
-
-// WINNER SUBMIT (profile pics)
-app.post('/api/winner-submit', upload.fields([{ name:'picture' }, { name:'laugh' }]), (req, res) => {
-  try{
-    const { fullname, userId } = req.body || {};
-    const pic = req.files && req.files.picture ? req.files.picture[0].path : null;
-    const laugh = req.files && req.files.laugh ? req.files.laugh[0].path : null;
-    telegramNotify(`<b>Winner Submission</b>\nName: ${fullname}\nUserId: ${userId}`, pic);
-    if(laugh) telegramNotify('Laugh pic', laugh);
-    return res.status(200).json({ ok:true });
-  }catch(e){
-    console.error('winner-submit', e && e.message);
-    return res.status(500).json({ ok:false, error: 'Server error' });
-  }
-});
-
 // GET USER
 app.get('/api/user/:id', (req, res) => {
   try{
@@ -457,49 +286,128 @@ app.get('/api/user/:id', (req, res) => {
   }
 });
 
-// REFERRALS DATA
-app.get('/api/referrals/:id', (req, res) => {
+/*
+  PLAY endpoint (server authoritative)
+  Request body: { userId, bet } 
+  Response: { ok, balance, win, isJackpot, jackpotAward, message }
+*/
+app.post('/api/play', (req, res) => {
   try{
+    const { userId, bet } = req.body || {};
+    if(!userId || typeof bet === 'undefined') return res.status(400).json({ ok:false, error:'Missing fields' });
+    const amount = Number(bet);
+    if(isNaN(amount) || amount <= 0) return res.status(400).json({ ok:false, error:'Invalid bet' });
+
     const users = readUsers();
-    const user = users.find(u => u.id === req.params.id);
-    if(!user) return res.status(404).json({ ok:false, error: 'User not found' });
-    const data = {
-      referralCode: user.referralCode || null,
-      referralLink: user.referralCode ? `${FRONTEND_ORIGIN}/register.html?ref=${user.referralCode}` : null,
-      referralEarned: user.referralEarned || 0,
-      referrals: user.referrals || []
-    };
-    return res.status(200).json({ ok:true, data });
+    const user = users.find(u => u.id === userId);
+    if(!user) return res.status(400).json({ ok:false, error:'User not found' });
+
+    if(user.blocked) return res.status(403).json({ ok:false, error:'User blocked' });
+    if((user.balance || 0) < amount) return res.status(400).json({ ok:false, error:'Insufficient balance' });
+
+    // Deduct bet immediately
+    user.balance = Number(user.balance || 0) - amount;
+
+    // Define slots and weights
+    // Layout (left->right): LOSE,10,20,50,100,200,500,1000,JACKPOT(4000)
+    const slots = [
+      { label: 'LOSE', amount: 0 },
+      { label: '10', amount: 10 },
+      { label: '20', amount: 20 },
+      { label: '50', amount: 50 },
+      { label: '100', amount: 100 },
+      { label: '200', amount: 200 },
+      { label: '500', amount: 500 },
+      { label: '1000', amount: 1000 },
+      { label: 'JACKPOT', amount: 4000 }
+    ];
+    const weights = [40, 18, 12, 10, 8, 6, 3, 1, 0.2]; // adjust for probabilities
+
+    // Weighted random pick
+    const total = weights.reduce((a,b)=>a+b,0);
+    let r = Math.random() * total;
+    let idx = 0;
+    for(let i=0;i<weights.length;i++){
+      r -= weights[i];
+      if(r <= 0){ idx = i; break; }
+    }
+    const picked = slots[idx];
+    let win = Number(picked.amount || 0);
+    let isJackpot = false;
+    if(picked.label === 'JACKPOT'){
+      // jackpot directly hit
+      isJackpot = true;
+      win = 4000;
+    }
+
+    // Credit win (if any)
+    if(win > 0){
+      user.balance = Number(user.balance || 0) + win;
+      user.cumulativeWins = (user.cumulativeWins || 0) + win;
+    }
+
+    // If cumulativeWins >= 2000 and jackpot not yet awarded -> award big 4000
+    let jackpotAward = 0;
+    if((user.cumulativeWins || 0) >= 2000 && !user.jackpotAwarded){
+      user.jackpotAwarded = true;
+      user.jackpotUnlocked = true;
+      user.balance = Number(user.balance || 0) + 4000;
+      jackpotAward = 4000;
+      telegramNotify(`<b>BIG JACKPOT AWARDED</b>\nUser: ${user.username}\nAward: $4000`);
+      const j = readJackpot();
+      j.awarded = j.awarded || [];
+      j.awarded.push({ userId: user.id, username: user.username, at: new Date().toISOString(), amount: 4000 });
+      writeJackpot(j);
+    }
+
+    writeUsers(users);
+
+    const message = win > 0 ? `You won $${win}` : 'No win this time';
+    return res.status(200).json({
+      ok: true,
+      balance: Number(user.balance || 0),
+      win,
+      isJackpot: isJackpot || false,
+      jackpotAward,
+      message
+    });
+
   }catch(e){
-    console.error('referrals', e && e.message);
+    console.error('play err', e && e.message);
     return res.status(500).json({ ok:false, error: 'Server error' });
   }
 });
 
-// REQUEST WITHDRAW (user)
-// NOTE: per your instruction, withdrawals are blocked until user.jackpotUnlocked === true
+// WITHDRAW - blocked until jackpot unlocked for that user
 app.post('/api/withdraw', (req, res) => {
   try{
     const { userId, amount, method, details } = req.body || {};
-    if(!userId || !amount) return res.status(400).json({ ok:false, error:'missing fields' });
-    const users = readUsers(); const user = users.find(u => u.id === userId);
-    if(!user) return res.status(400).json({ ok:false, error: 'user not found' });
+    if(!userId || typeof amount === 'undefined') return res.status(400).json({ ok:false, error:'Missing fields' });
+    const amt = Number(amount);
+    if(isNaN(amt) || amt <= 0) return res.status(400).json({ ok:false, error:'Invalid amount' });
 
-    // Blocked until jackpot unlocked
-    if(!user.jackpotUnlocked) return res.status(403).json({ ok:false, error: 'Withdrawals locked — win the jackpot to enable withdrawals' });
+    const users = readUsers();
+    const user = users.find(u => u.id === userId);
+    if(!user) return res.status(400).json({ ok:false, error:'User not found' });
 
-    if(user.blocked) return res.status(403).json({ ok:false, error: 'user blocked' });
-    if((user.balance || 0) < Number(amount)) return res.status(400).json({ ok:false, error:'insufficient balance' });
+    // Block until jackpot unlocked/awarded
+    if(!user.jackpotUnlocked) return res.status(403).json({ ok:false, error:'Withdrawals locked — win the jackpot to enable withdrawals' });
+
+    if(user.blocked) return res.status(403).json({ ok:false, error:'User blocked' });
+    if((user.balance || 0) < amt) return res.status(400).json({ ok:false, error:'Insufficient balance' });
 
     const w = readWithdrawals();
     const id = uuidv4();
-    const item = { id, userId, amount: Number(amount), method: method||'local', details: details||'', status:'pending', createdAt: new Date().toISOString() };
+    const item = { id, userId, amount: amt, method: method || 'local', details: details || '', status: 'pending', createdAt: new Date().toISOString() };
     w.unshift(item);
     writeWithdrawals(w);
-    telegramNotify(`<b>Withdrawal Requested</b>\nUser: ${user.username}\nAmount: $${amount}\nMethod: ${method||'local'}`);
+
+    // optionally reduce balance now or wait until admin approves. We'll NOT reduce here (admin approves later).
+    telegramNotify(`<b>Withdrawal Requested</b>\nUser: ${user.username}\nAmount: $${amt}`);
+
     return res.status(200).json({ ok:true, withdrawal: item });
   }catch(e){
-    console.error('withdraw req', e && e.message);
+    console.error('withdraw err', e && e.message);
     return res.status(500).json({ ok:false, error: 'Server error' });
   }
 });
@@ -515,7 +423,7 @@ app.get('/api/leaderboard', (req, res) => {
   }
 });
 
-// ADMIN LOGIN
+// ADMIN endpoints (login & management)
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body || {};
   if(!password || password !== process.env.ADMIN_PASSWORD) return res.status(401).json({ ok:false, error:'Unauthorized' });
@@ -523,7 +431,6 @@ app.post('/api/admin/login', (req, res) => {
   return res.status(200).json({ ok:true });
 });
 
-// ADMIN: list users
 app.get('/api/admin/users', requireAdmin, (req, res) => {
   try{
     const users = readUsers().map(u => { const { password, secretPin, ...pub } = u; return pub; });
@@ -531,7 +438,6 @@ app.get('/api/admin/users', requireAdmin, (req, res) => {
   }catch(e){ console.error('admin users', e && e.message); return res.status(500).json({ ok:false, error:'Server error' }); }
 });
 
-// ADMIN: block/unblock
 app.post('/api/admin/user/:id/block', requireAdmin, (req, res) => {
   try{
     const { reason, block } = req.body || {};
@@ -546,16 +452,6 @@ app.post('/api/admin/user/:id/block', requireAdmin, (req, res) => {
   }catch(e){ console.error('admin block', e && e.message); return res.status(500).json({ ok:false, error: 'server error' }); }
 });
 
-// ADMIN: search
-app.get('/api/admin/search', requireAdmin, (req, res) => {
-  try{
-    const q = (req.query.q||'').toLowerCase();
-    const users = readUsers().filter(u => (u.username||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q) || (u.phone||'').includes(q));
-    return res.status(200).json({ ok:true, users });
-  }catch(e){ console.error('admin search', e && e.message); return res.status(500).json({ ok:false, error:'server error' }); }
-});
-
-// ADMIN: withdrawals list
 app.get('/api/admin/withdrawals', requireAdmin, (req, res) => {
   try{
     const w = readWithdrawals();
@@ -563,7 +459,6 @@ app.get('/api/admin/withdrawals', requireAdmin, (req, res) => {
   }catch(e){ console.error('admin withdrawals', e && e.message); return res.status(500).json({ ok:false, error:'server error' }); }
 });
 
-// ADMIN: handle withdrawal (approve/decline)
 app.post('/api/admin/withdraw/:id', requireAdmin, (req, res) => {
   try{
     const { action, note } = req.body || {};
@@ -579,6 +474,7 @@ app.post('/api/admin/withdraw/:id', requireAdmin, (req, res) => {
     if(action === 'approve'){
       item.status = 'approved';
       item.adminNote = note || '';
+      // deduct balance (admin approves money out)
       user.balance = Math.max(0, (user.balance || 0) - item.amount);
       user.lastWithdrawal = { id: item.id, amount: item.amount, at: new Date().toISOString() };
       telegramNotify(`<b>Withdrawal Approved</b>\nUser: ${user.username}\nAmount: $${item.amount}`);
@@ -591,24 +487,27 @@ app.post('/api/admin/withdraw/:id', requireAdmin, (req, res) => {
     writeUsers(users); writeWithdrawals(w);
     logAdmin('withdraw', { id: item.id, action, note, admin: req.sessionID });
     return res.status(200).json({ ok:true, withdrawal: item });
-  }catch(e){ console.error('admin withdraw', e && e.message); return res.status(500).json({ ok:false, error:'server error' }); }
+  }catch(e){
+    console.error('admin withdraw', e && e.message);
+    return res.status(500).json({ ok:false, error:'server error' });
+  }
 });
 
-// HEALTH check
+// HEALTH
 app.get('/api/health', (req, res) => {
   return res.status(200).json({ ok: true, status: 'UP' });
 });
 
-// Catch-all API error handler
+// Catch-all
 app.use('/api/*', (req, res) => {
   return res.status(404).json({ ok:false, error: 'Not found' });
 });
 
-// Generic error handler (no stack trace returned)
+// Error handler
 app.use(function(err, req, res, next){
   console.error('Server error', err && err.message);
   res.status(500).json({ ok:false, error: 'Server error' });
 });
 
-// Start server
+// Start
 app.listen(PORT, () => console.log(`Plinko backend listening on ${PORT}`));
