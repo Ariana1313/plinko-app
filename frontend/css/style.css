@@ -165,6 +165,22 @@ input::placeholder, textarea::placeholder {
   margin:10px 0;
 }
 
+/* Plinko 3D board and controls styles */
+#board { border-radius:14px; box-shadow: 0 18px 60px rgba(0,0,0,0.12), inset 0 -8px 40px rgba(0,200,80,0.03); background:linear-gradient(180deg,#f7fff7,#e9fff0); }
+
+/* floating DOM ball already styled by JS fallback; this ensures placement */
+.plinko-ball { position:absolute; width:22px; height:22px; border-radius:50%; }
+
+/* control card */
+.control-card input[type=number]{ padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06); font-size:16px; }
+.control-card .btn{ width:100%; margin-top:8px; }
+
+/* small responsive */
+@media (max-width:640px){
+  .play-wrapper{flex-direction:column}
+  .right-area{width:100%}
+  #board{height:420px}
+}
 /* 6) Buttons remain visible on dark background */
 .btn, button {
   color: #032 !important;
