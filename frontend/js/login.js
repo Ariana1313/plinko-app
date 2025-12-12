@@ -1,39 +1,42 @@
-// frontend/js/login.js
-const API = "https://plinko-app.onrender.com";
+const API_BASE = "https://plinko-app.onrender.com";
+const form = document.getElementById("loginForm");
 
-function saveUser(user){
-  try { localStorage.setItem('plinkoUser', JSON.stringify(user)); }
-  catch(e){ console.warn('saveUser failed', e); }
-}
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('loginForm');
-  if(!form){ console.error('loginForm not found'); return; }
+  const identifier = document.getElementById("identifier").value.trim();
+  const password = document.getElementById("password").value;
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('loginUsername')?.value?.trim() || '';
-    const password = document.getElementById('loginPassword')?.value || '';
+  if (!identifier || !password) {
+    alert("Enter username/email and password");
+    return;
+  }
 
-    if(!username || !password){ alert('Enter username/email and password'); return; }
+  try {
+    const res = await fetch(`${API_BASE}/api/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ identifier, password })
+    });
 
-    try {
-      const res = await fetch(`${API}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      const data = await res.json();
-      console.log('[login] resp', data);
-      if(!res.ok || !data.ok){
-        alert(data.error || 'Login failed');
-        return;
-      }
-      saveUser(data.user);
-      window.location.href = 'plinko.html';
-    } catch(err){
-      console.error('login error', err);
-      alert('Network error — please try again.');
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      alert(data.error || "Login failed");
+      return;
     }
-  });
+
+    // Save token if you use one
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+    }
+
+    window.location.href = "plinko.html";
+
+  } catch (err) {
+    console.error(err);
+    alert("Network error — please try again");
+  }
 });
