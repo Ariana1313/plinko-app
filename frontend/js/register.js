@@ -1,7 +1,6 @@
 
 // frontend/js/register.js
 const API_BASE = "https://plinko-app.onrender.com";
-
 const form = document.getElementById("registerForm");
 
 if (!form) {
