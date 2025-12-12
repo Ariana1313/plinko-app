@@ -1,80 +1,204 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   <title>Plinko — Plinko N.U</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="css/plinko.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    /* Extra styling specifically for Plinko page */
+    body { background:#f8fff8; }
+
+    .top-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:12px 16px;
+      background:#fff;
+      box-shadow:0 4px 20px rgba(0,0,0,0.06);
+      position:sticky;
+      top:0;
+      z-index:20;
+    }
+    .top-header .left {
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    #profilePic {
+      width:48px;
+      height:48px;
+      border-radius:50%;
+      border:3px solid #00e672;
+      object-fit:cover;
+    }
+    #usernameDisplay {
+      font-size:17px;
+      font-weight:700;
+      color:#0c3;
+    }
+
+    #balanceDisplay {
+      font-size:17px;
+      font-weight:900;
+      color:#022;
+      background:#d7ffe6;
+      padding:6px 10px;
+      border-radius:8px;
+    }
+
+    .board-holder {
+      width:100%;
+      margin:20px auto;
+      border-radius:12px;
+      overflow:hidden;
+      background:linear-gradient(180deg,#f0fff5,#ffffff);
+      box-shadow:0 8px 25px rgba(0,0,0,0.05);
+      padding-bottom:26px;
+    }
+
+    .slot-labels {
+      display:flex;
+      justify-content:space-between;
+      padding:10px 18px;
+      margin-top:12px;
+    }
+    .slot-labels .slot {
+      flex:1;
+      text-align:center;
+      font-weight:700;
+      color:#045;
+      font-size:13px;
+    }
+
+    .bet-box {
+      margin:20px auto;
+      padding:16px;
+      background:#fff;
+      border-radius:12px;
+      width:94%;
+      box-shadow:0 6px 20px rgba(0,0,0,0.05);
+    }
+    .bet-box input {
+      width:100%;
+      padding:12px;
+      border-radius:10px;
+      border:1px solid rgba(0,0,0,0.08);
+      font-size:16px;
+      margin-bottom:10px;
+    }
+
+    #dropBtn {
+      width:100%;
+      font-size:18px;
+      padding:14px;
+      border-radius:12px;
+      font-weight:900;
+    }
+
+    #resultBox {
+      text-align:center;
+      font-size:18px;
+      margin-top:14px;
+      font-weight:700;
+      color:#033;
+      min-height:26px;
+    }
+
+    .referral-area {
+      margin:20px auto;
+      width:94%;
+      background:#fff;
+      padding:14px;
+      border-radius:12px;
+      box-shadow:0 6px 20px rgba(0,0,0,0.05);
+    }
+    .referral-area input {
+      width:100%;
+      padding:12px;
+      border-radius:8px;
+      border:1px solid rgba(0,0,0,0.09);
+      margin-bottom:8px;
+      font-size:14px;
+    }
+    .referral-area button {
+      padding:10px 14px;
+      border-radius:8px;
+      font-weight:700;
+      font-size:14px;
+    }
+
+    .footer-bar {
+      padding:16px;
+      text-align:center;
+      margin-top:40px;
+      color:#666;
+      font-size:14px;
+    }
+  </style>
 </head>
-<body class="neon-page">
-  <header class="site-header">
+
+<body>
+
+  <!-- Header -->
+  <div class="top-header">
     <div class="left">
-      <img src="assets/logo-card.png" alt="Plinko logo" class="logo-card">
-      <div class="brand">
-        <h1>Plinko N.U</h1>
-        <div id="userLine" class="user-line">
-          <img id="profilePic" class="profile-pic" src="assets/default-avatar.png" alt="avatar">
-          <div class="user-info">
-            <div id="usernameDisplay" class="username">Guest</div>
-            <div id="userIdSmall" class="user-id small"></div>
-          </div>
-        </div>
-      </div>
+      <img id="profilePic" src="assets/default-avatar.png">
+      <div id="usernameDisplay">Player</div>
     </div>
-    <div class="right">
-      <div class="balance-box">
-        <div class="label">Balance</div>
-        <div id="balanceDisplay" class="balance-amount">$0</div>
-      </div>
-      <button id="logoutBtn" class="btn small ghost">Logout</button>
-    </div>
-  </header>
 
-  <main class="container">
-    <section class="plinko-area">
-      <div class="canvas-wrap">
-        <canvas id="plinkoCanvas" width="720" height="520"></canvas>
-        <div class="board-bottom labels" id="slotLabels">
-          <!-- slot labels are injected by JS -->
-        </div>
-      </div>
+    <div id="balanceDisplay">$0</div>
+  </div>
 
-      <aside class="controls">
-        <div class="card control-card">
-          <h3>Play</h3>
 
-          <label class="small">Bet amount</label>
-          <input id="betAmount" type="number" min="1" step="1" placeholder="Enter bet" />
+  <!-- Plinko Board Container -->
+  <div class="board-holder">
+    <canvas id="plinkoCanvas" style="width:100%;height:420px;"></canvas>
 
-          <button id="dropBtn" class="btn large">Drop Ball</button>
+    <div id="slotLabels" class="slot-labels"></div>
+  </div>
 
-          <div id="resultBox" class="result-box" aria-live="polite"></div>
 
-          <hr/>
+  <!-- Betting box -->
+  <div class="bet-box">
+    <label style="font-weight:700;">Bet Amount ($):</label>
+    <input id="betAmount" type="number" placeholder="Enter bet amount" value="10">
 
-          <label class="small">Referral link</label>
-          <div class="ref-row">
-            <input id="referralInput" readonly />
-            <button id="copyRef" class="btn small">Copy</button>
-          </div>
+    <button id="dropBtn" class="btn">DROP BALL</button>
 
-          <button id="withdrawBtn" class="btn ghost full" disabled>Withdraw</button>
-          <p class="muted small">Reach $2,000 cumulative wins to unlock JACKPOT ($4,000) and enable withdrawals.</p>
-        </div>
-      </aside>
-    </section>
-  </main>
+    <div id="resultBox"></div>
+  </div>
 
-  <footer class="footer">© 2025 Plinko N.U</footer>
 
-  <!-- Sounds (you already added these files at assets/sounds/) -->
-  <audio id="sndLose" src="assets/sounds/lose.mp3" preload="auto"></audio>
-  <audio id="sndWin" src="assets/sounds/win.mp3" preload="auto"></audio>
-  <audio id="sndJackpot" src="assets/sounds/jackpot.mp3" preload="auto"></audio>
-  <audio id="sndTap" src="assets/sounds/tap.mp3" preload="auto"></audio>
-  <audio id="sndClap" src="assets/sounds/clap.mp3" preload="auto"></audio>
+  <!-- Referral Copy Section -->
+  <div class="referral-area">
+    <label>Your Referral Link:</label>
+    <input id="referralInput" readonly>
 
-  <script src="js/auth.js"></script>
+    <button id="copyRef" class="btn small">Copy</button>
+  </div>
+
+
+  <!-- Withdraw + Logout -->
+  <div style="width:94%; margin:20px auto; display:flex; gap:10px;">
+    <button id="withdrawBtn" class="btn small ghost" style="flex:1;">Withdraw</button>
+    <button id="logoutBtn" class="btn small" style="flex:1;">Logout</button>
+  </div>
+
+
+  <!-- Sounds -->
+  <audio id="sndLose" src="assets/sounds/lose.mp3"></audio>
+  <audio id="sndWin" src="assets/sounds/win.mp3"></audio>
+  <audio id="sndJackpot" src="assets/sounds/jackpot.mp3"></audio>
+  <audio id="sndTap" src="assets/sounds/tap.mp3"></audio>
+  <audio id="sndClap" src="assets/sounds/clap.mp3"></audio>
+
+
+  <div class="footer-bar">© 2025 Plinko N.U</div>
+
   <script src="js/plinko.js"></script>
+
 </body>
 </html>
