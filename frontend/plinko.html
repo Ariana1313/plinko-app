@@ -1,88 +1,73 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Plinko — Plinko N.U</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Plinko — N.U</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/plinko.css">
+    <!-- Main Game Styles -->
+    <link rel="stylesheet" href="css/plinko.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/certificate.css">
+
 </head>
 
 <body class="neon-page">
 
-  <!-- HEADER -->
-  <header class="site-header">
-    <div class="left" style="display:flex;align-items:center;gap:10px">
-      <img src="assets/logo-card.png" class="logo-card" alt="logo">
-      <h1>Plinko N.U</h1>
+    <!-- GLOBAL LOADING SPINNER -->
+    <div id="globalSpinner">
+        <div class="spinnerBox">
+            <div class="spinner"></div>
+            <div class="msg" id="spinnerMsg">Loading…</div>
+        </div>
     </div>
 
-    <nav class="right">
-      <span id="usernameDisplay" style="margin-right:15px;color:var(--primary)"></span>
-      <button id="logoutBtn" class="btn small ghost" style="padding:6px 12px">Logout</button>
-    </nav>
-  </header>
+    <!-- HEADER -->
+    <header class="site-header">
+        <div class="left">
+            <img src="assets/blue-logo.png" alt="logo" class="top-logo">
+            <h1>PLINKO N.U</h1>
+        </div>
 
-  <!-- SPINNER -->
-  <div id="globalSpinner">
-    <div class="spinnerBox">
-      <div class="spinner"></div>
-      <div id="spinnerMsg">Loading…</div>
-    </div>
-  </div>
+        <nav class="right">
+            <a href="logout.html" class="small-link">Logout</a>
+        </nav>
+    </header>
 
-  <!-- CERTIFICATE MODAL -->
-  <div id="certModal">
-    <div class="card">
-      <h2 style="text-align:center;color:var(--primary)">🎉 JACKPOT WINNER 🎉</h2>
-      <canvas id="certCanvas" class="certCanvas" width="1200" height="675"></canvas>
+    <!-- MAIN GAME -->
+    <main id="gameArea">
+        <section class="balance-box">
+            <h2>Your Balance: <span id="balanceDisplay">$0.00</span></h2>
+        </section>
 
-      <div class="actions" style="margin-top:20px;display:flex;gap:10px;justify-content:center">
-        <button id="downloadCert" class="btn">Download Certificate</button>
-        <button id="closeCert" class="btn ghost">Close</button>
-      </div>
-    </div>
-  </div>
+        <section class="plinko-board-section">
+            <canvas id="plinkoCanvas"></canvas>
+        </section>
 
-  <!-- MAIN CONTENT -->
-  <main class="container">
+        <section class="actions">
+            <input type="number" id="betAmount" placeholder="Enter Bet Amount">
+            <button id="playBtn" class="btn">PLAY</button>
+        </section>
+    </main>
 
-    <!-- BALANCE BOX -->
-    <div class="form-card" style="text-align:center;margin-top:25px">
-      <h2>Your Balance</h2>
-      <p style="font-size:28px;color:var(--primary);text-shadow:0 0 15px var(--primary-glow)">
-        $<span id="balanceDisplay">0</span>
-      </p>
-      <p>Your Referral Code: <b id="refCodeBox"></b></p>
+    <!-- CERTIFICATE MODAL -->
+    <div id="certModal">
+        <div class="card">
+            <h2>Congratulations — You Won JACKPOT!</h2>
+            <img src="assets/gold-seal.svg" class="gold-seal" alt="seal">
 
-      <button id="copyRefBtn" class="btn small" style="margin-top:10px">Copy Referral Link</button>
+            <canvas id="certCanvas" class="certCanvas" width="1200" height="675"></canvas>
 
-      <div id="copyMsg" style="margin-top:4px;color:var(--primary);display:none">
-        ✓ Copied!
-      </div>
+            <div class="actions">
+                <button id="downloadCert" class="btn">Download Certificate</button>
+                <button id="closeCert" class="btn ghost">Close</button>
+            </div>
+        </div>
     </div>
 
-    <!-- BET SETTINGS -->
-    <div class="form-card" style="margin-top:20px">
-      <h2>Set Bet</h2>
-      <input id="betInput" type="number" placeholder="Enter bet amount" class="field" style="padding:12px;width:100%">
-      <button id="dropBallBtn" class="btn" style="margin-top:12px">Drop Ball</button>
-    </div>
-
-    <!-- PLINKO BOARD -->
-    <div class="plinko-board" style="margin-top:35px;text-align:center">
-      <canvas id="plinkoCanvas" width="320" height="480" style="max-width:100%"></canvas>
-      <p style="margin-top:10px;color:var(--text-dim)">Watch the ball fall and try to hit the Jackpot!</p>
-    </div>
-
-  </main>
-
-  <footer class="footer">© 2025 Plinko N.U</footer>
-
-  <!-- SCRIPTS -->
-  <script src="js/auth.js"></script>
-  <script src="js/plinko.js"></script>
+    <!-- SCRIPTS -->
+    <script src="js/auth.js"></script>
+    <script src="js/plinko.js"></script>
 
 </body>
 </html>
