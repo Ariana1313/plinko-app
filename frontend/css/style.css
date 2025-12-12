@@ -1,197 +1,303 @@
-/* style.css - Neon Casino theme (mobile-first) */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;900&display=swap');
+/* =========================================================
+   Plinko NU — Modern Neon Gaming Style
+   Clean, responsive, mobile-first, stylish UI
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
 
 :root{
-  --bg:#ffffff;
-  --neon:#00ff66;
-  --neon-2:#00c853;
-  --muted:#6b7280;
-  --text:#071014;
-  --glass: rgba(255,255,255,0.7);
+  --bg: #0b0f14;
+  --card: #111821;
+  --accent: #00ff99;
+  --accent-soft: rgba(0,255,153,0.3);
+  --text: #ffffff;
+  --muted: #98a0a8;
+  --danger: #ff4e4e;
+  --success: #00ff99;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{font-family:Inter,system-ui,Arial; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;}
-.container{max-width:980px;margin:92px auto 92px;padding:16px}
 
-/* HEADER */
-.header{
-  position:fixed;top:0;left:0;right:0;height:72px;background:#fff;border-bottom:1px solid rgba(0,0,0,0.04);
-  display:flex;align-items:center;justify-content:space-between;padding:10px 14px;z-index:1000;
-  box-shadow:0 6px 30px rgba(0,0,0,0.04);
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Inter', sans-serif;
 }
-.header-left{display:flex;align-items:center;gap:12px}
-.profile-circle{width:48px;height:48px;border-radius:50%;overflow:hidden;border:3px solid rgba(0,255,102,0.8);display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, rgba(0,255,102,0.06), #fff)}
-.profile-circle img{width:100%;height:100%;object-fit:cover}
-.username{font-weight:700;color:var(--text)}
-.header-right img{width:26px;margin-left:10px;opacity:0.95}
 
-/* marquee */
-.marquee{width:100%;padding:8px 12px;background:linear-gradient(90deg,#f7fff7,#ffffff);font-weight:600;color:var(--neon);border-top:1px solid rgba(0,0,0,0.03);text-align:center}
-
-/* CARD / HERO */
-.hero{background:linear-gradient(180deg, rgba(0,255,102,0.03), #fff);border-radius:14px;padding:18px;box-shadow:0 12px 40px rgba(0,255,102,0.06);border:1px solid rgba(0,0,0,0.04)}
-.title{font-size:26px;font-weight:900;margin-bottom:6px}
-.subtitle{color:var(--muted);font-size:14px;margin-bottom:12px}
-
-/* BUTTONS */
-.btn{background:linear-gradient(90deg,var(--neon),var(--neon-2)); color:#032; padding:12px 16px;border-radius:12px;border:none;font-weight:800;box-shadow:0 8px 30px rgba(0,255,102,0.12);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
-.btn.small{padding:8px 10px;font-size:14px}
-.btn.ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);color:var(--text)}
-
-/* CARDS / GRID */
-.card-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
-.card{flex:1 1 180px;min-width:160px;background:#fff;border-radius:12px;padding:12px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 8px 24px rgba(0,0,0,0.04);text-align:center}
-.card img{width:100%;height:120px;object-fit:cover;border-radius:8px}
-.card h3{margin:8px 0 4px;font-size:16px}
-.card p{margin:0;color:var(--muted);font-size:13px}
-
-/* FORMS */
-.form-card{background:#fff;border-radius:12px;padding:18px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 12px 30px rgba(0,0,0,0.04)}
-.field{position:relative;margin:10px 0}
-.field input[type="text"], .field input[type="password"], .field input[type="email"], .field input[type="date"], .field select {
-  width:100%;padding:14px 14px 14px 44px;border-radius:12px;border:1px solid rgba(0,0,0,0.08);font-size:15px;background:transparent;
+body{
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
 }
-.field label.icon{
-  position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:0.9;width:20px;height:20px;display:flex;align-items:center;justify-content:center;
+
+.container{
+  padding:20px;
+  margin-top:110px;
+  max-width:600px;
+  margin-left:auto;
+  margin-right:auto;
 }
-.small-note{font-size:13px;color:var(--muted);margin-top:6px}
-/* --- input icons alignment improvements --- */
-.field { position:relative; margin:10px 0; display:flex; align-items:center; }
-.field .icon { width:40px; display:flex; align-items:center; justify-content:center; font-size:18px; }
-.field input[type="text"], .field input[type="password"], .field input[type="email"], .field input[type="date"], .field select, .field input[type="file"] {
-  flex:1;
-  padding:12px 14px;
+
+/* ================================
+   HEADER
+   ================================ */
+
+.site-header{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:85px;
+  background:#0d141c;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 18px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  z-index:999;
+}
+
+.site-header .left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.logo-card{
+  width:58px;
+  height:58px;
   border-radius:12px;
-  border:1px solid rgba(0,0,0,0.08);
-  background:transparent;
+  border:2px solid var(--accent);
+  background:#0b0f14;
+  padding:6px;
+}
+
+.site-header h1{
+  font-size:22px;
+  font-weight:800;
+  color:var(--accent);
+}
+
+.small-link{
+  color:var(--accent);
+  font-size:15px;
+  text-decoration:none;
+  font-weight:600;
+}
+
+/* ================================
+   FORM CARDS
+   ================================ */
+
+.form-card{
+  background:var(--card);
+  padding:25px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 0 25px rgba(0,255,153,0.08);
+}
+
+.form-card h2{
+  font-size:24px;
+  font-weight:800;
+  margin-bottom:6px;
+}
+
+.subtitle{
+  font-size:14px;
+  color:var(--muted);
+  margin-bottom:16px;
+}
+
+/* ================================
+   INPUT FIELDS
+   ================================ */
+
+.field{
+  position:relative;
+  margin:14px 0;
+}
+
+.field .icon{
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  opacity:0.8;
+  font-size:18px;
+}
+
+.field input{
+  width:100%;
+  padding:16px 16px 16px 46px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.15);
+  background:#0d161f;
+  color:#fff;
   font-size:15px;
 }
-.form-card h2 { margin-bottom:8px; }
-.site-header { position:fixed; top:0; left:0; right:0; height:64px; display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:#fff; border-bottom:1px solid rgba(0,0,0,0.04); z-index:1000;}
-.logo-card { width:44px; height:44px; object-fit:contain; margin-right:8px; }
-.container{ max-width:980px; margin:100px auto 120px; padding:16px; }
-.small-link { font-size:14px; padding:8px; color:#0b6; text-decoration:none; }
-/* PLINKO BOARD */
-.plinko-board{width:100%;height:460px;background:linear-gradient(180deg,#fff,rgba(0,255,102,0.02));border-radius:12px;border:1px dashed rgba(0,0,0,0.04);position:relative;overflow:hidden;margin-top:12px}
-.ball{position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #fff,#d4ffe0);border:2px solid rgba(0,255,102,0.9);box-shadow:0 6px 18px rgba(0,0,0,0.12)}
 
-/* POPUP */
-.popup{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:linear-gradient(90deg,var(--neon),var(--neon-2));color:#012;padding:12px 18px;border-radius:10px;box-shadow:0 12px 40px rgba(0,255,102,0.14);display:none;z-index:2000}
-
-/* FOOTER */
-.footer{position:fixed;left:0;right:0;bottom:0;background:#fff;padding:12px;border-top:1px solid rgba(0,0,0,0.04);text-align:center;color:#888;font-size:13px}
-
-/* RESPONSIVE */
-@media (max-width:520px){
-  .container{margin:110px 12px 110px}
-  .title{font-size:20px}
-  .profile-circle{width:40px;height:40px}
-  .card img{height:100px}
-  .plinko-board{height:360px}
+.field input::placeholder{
+  color:#54606d;
+  font-weight:400;
 }
 
-/* Neon Form Theme Patch */
-.neon-page body { background:#050509 !important; color:white !important; }
-.neon-page .form-card { background:#0d0d17 !important; box-shadow:0 0 12px #0ff2; }
-.neon-page .field { background:#111 !important; border:1px solid #0af3; }
-.neon-page input { color:white !important; }
-.neon-page input::placeholder { color:#aaa; }
+/* ================================
+   BUTTONS
+   ================================ */
 
-/* ---------- Fix: make inputs always readable on dark neon pages ---------- */
-
-/* 1) Universal input/readable rules */
-input, textarea, select {
-  color: #ffffff !important;               /* typed text visible */
-  background: rgba(255,255,255,0.03) !important; /* subtle dark background for inputs */
-  border: 1px solid rgba(255,255,255,0.10) !important;
-  padding: 12px 14px !important;
-  border-radius: 12px !important;
-  font-size: 15px !important;
-  outline: none !important;
-  box-sizing: border-box;
+.btn{
+  padding:14px 18px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(90deg,#00ff99,#00cc77);
+  color:#002a15;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 18px rgba(0,255,153,0.28);
 }
 
-/* ensure file inputs are readable */
-input[type="file"] { background: rgba(255,255,255,0.04) !important; }
-
-/* 2) Placeholder visibility */
-input::placeholder, textarea::placeholder {
-  color: rgba(255,255,255,0.58) !important;
+.btn.ghost{
+  background:transparent;
+  color:var(--accent);
+  border:1px solid var(--accent-soft);
 }
 
-/* 3) Force inputs inside .field to keep layout and icon alignment */
-.field {
-  display:flex !important;
-  align-items:center !important;
-  gap:10px !important;
-  background: rgba(255,255,255,0.02) !important;
-  border-radius:12px !important;
-  padding:8px 10px !important;
-}
-.field .icon {
-  min-width:28px !important;
-  text-align:center !important;
-  font-size:18px !important;
-  opacity:0.9 !important;
+.btn.small{
+  padding:8px 12px;
+  font-size:14px;
 }
 
-/* text inside field input */
-.field input {
-  flex:1 !important;
-  background: transparent !important;
-  border: none !important;
-  padding:10px 6px !important;
-  color: #fff !important;
+/* ================================
+   FOOTER
+   ================================ */
+
+.footer{
+  margin-top:50px;
+  padding:18px;
+  text-align:center;
+  font-size:13px;
+  color:var(--muted);
 }
 
-/* 4) Fix referral visible input specifically (keeps inline look with button) */
-#referralCodeVisible {
-  background: rgba(255,255,255,0.03) !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-  color: #fff !important;
-  padding: 12px !important;
+/* ================================
+   PLINKO BOARD
+   ================================ */
+
+.plinko-wrapper{
+  background:#0d141c;
+  padding:20px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 0 30px rgba(0,255,153,0.07);
+  margin-top:20px;
 }
 
-/* 5) Ensure forgot/reset page plain inputs match card theme */
-.card input, .card textarea {
-  background: rgba(255,255,255,0.03) !important;
-  color: #fff !important;
-  border-radius: 10px !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-  padding: 12px !important;
-  display:block;
+.plinko-board{
   width:100%;
-  margin:10px 0;
+  height:480px;
+  background:radial-gradient(circle at center,#0f1823,#0a0e14 80%);
+  border-radius:12px;
+  position:relative;
+  overflow:hidden;
+  border:2px solid rgba(0,255,153,0.25);
 }
 
-/* Plinko 3D board and controls styles */
-#board { border-radius:14px; box-shadow: 0 18px 60px rgba(0,0,0,0.12), inset 0 -8px 40px rgba(0,200,80,0.03); background:linear-gradient(180deg,#f7fff7,#e9fff0); }
-
-/* floating DOM ball already styled by JS fallback; this ensures placement */
-.plinko-ball { position:absolute; width:22px; height:22px; border-radius:50%; }
-
-/* control card */
-.control-card input[type=number]{ padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.06); font-size:16px; }
-.control-card .btn{ width:100%; margin-top:8px; }
-
-/* small responsive */
-@media (max-width:640px){
-  .play-wrapper{flex-direction:column}
-  .right-area{width:100%}
-  #board{height:420px}
-}
-/* 6) Buttons remain visible on dark background */
-.btn, button {
-  color: #032 !important;
-  background: linear-gradient(90deg, var(--neon), var(--neon-2)) !important;
-  border-radius: 12px !important;
-  padding: 12px 14px !important;
+.slot{
+  position:absolute;
+  bottom:0;
+  width:80px;
+  height:45px;
+  background:#0b1118;
+  border:2px solid rgba(255,255,255,0.06);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:6px;
+  font-size:15px;
+  font-weight:700;
+  transition:0.2s;
 }
 
-/* 7) Small mobile improvements */
-@media (max-width:520px) {
-  .field { padding:10px !important; gap:8px !important; }
-  .field .icon { min-width:26px; font-size:16px; }
-  input { font-size:15px !important; padding:10px !important; }
+.slot.win{
+  background:#0aff8c22;
+  border-color:#00ff99;
+  color:#00ff99;
 }
+
+.slot.jackpot{
+  background:#ffdf0050;
+  border-color:#ffdf00;
+  color:#ffdf00;
+  font-weight:900;
+  font-size:18px;
+}
+
+.ball{
+  position:absolute;
+  width:20px;
+  height:20px;
+  background:radial-gradient(circle,#ffffff,#8bffd0);
+  border-radius:50%;
+  box-shadow:0 0 14px rgba(0,255,153,0.7);
+}
+
+/* ================================
+   BALANCE & TOP BAR
+   ================================ */
+
+.top-info{
+  margin-top:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color:var(--accent);
+  font-weight:700;
+}
+
+.balance-box{
+  background:#0c151d;
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid rgba(0,255,153,0.2);
+  font-size:16px;
+}
+
+/* ================================
+   NOTIFICATION POPUP
+   ================================ */
+
+.popup{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:linear-gradient(90deg,#00ff99,#00cc77);
+  color:#002313;
+  padding:14px 20px;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:800;
+  display:none;
+  box-shadow:0 0 25px rgba(0,255,153,0.3);
+  z-index:9999;
+}
+
+/* ================================
+   LOADING SPINNER
+   ================================ */
+
+.spinner{
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:4px solid rgba(255,255,255,0.2);
+  border-top-color:var(--accent);
+  animation:spin 0.9s linear infinite;
+  margin:auto;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+  }
