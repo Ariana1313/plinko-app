@@ -1,189 +1,88 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   <title>Plinko — Plinko N.U</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="css/style.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/plinko.css">
 </head>
+
 <body class="neon-page">
+
+  <!-- HEADER -->
   <header class="site-header">
-    <div class="left">
-      <img src="assets/logo-card.png" alt="logo" class="logo-card">
+    <div class="left" style="display:flex;align-items:center;gap:10px">
+      <img src="assets/logo-card.png" class="logo-card" alt="logo">
       <h1>Plinko N.U</h1>
     </div>
 
     <nav class="right">
-      <div id="userArea">
-        <!-- user avatar + name populated by JS -->
-        <div class="avatarWrap"><img id="avatarImg" src="assets/avatar-default.png" alt="avatar"></div>
-        <div class="userInfo"><div id="usernameTxt">Guest</div><div id="userIdTxt" class="small muted">ID:</div></div>
-      </div>
-      <div class="balanceBox">Balance <div id="balanceVal" class="balanceAmt">$0</div></div>
-      <button id="logoutBtn" class="btn small ghost">Logout</button>
+      <span id="usernameDisplay" style="margin-right:15px;color:var(--primary)"></span>
+      <button id="logoutBtn" class="btn small ghost" style="padding:6px 12px">Logout</button>
     </nav>
   </header>
 
-  <!-- GLOBAL SPINNER (overlay) -->
-  <div id="globalSpinner" class="hidden">
+  <!-- SPINNER -->
+  <div id="globalSpinner">
     <div class="spinnerBox">
       <div class="spinner"></div>
-      <div class="msg" id="spinnerMsg">Loading…</div>
+      <div id="spinnerMsg">Loading…</div>
     </div>
   </div>
 
-  <!-- Certificate Modal (hidden until jackpot) -->
-  <div id="certModal" class="modal hidden">
-    <div class="modalCard">
-      <h2>Congratulations — You Won JACKPOT!</h2>
+  <!-- CERTIFICATE MODAL -->
+  <div id="certModal">
+    <div class="card">
+      <h2 style="text-align:center;color:var(--primary)">🎉 JACKPOT WINNER 🎉</h2>
       <canvas id="certCanvas" class="certCanvas" width="1200" height="675"></canvas>
-      <div class="actions">
+
+      <div class="actions" style="margin-top:20px;display:flex;gap:10px;justify-content:center">
         <button id="downloadCert" class="btn">Download Certificate</button>
         <button id="closeCert" class="btn ghost">Close</button>
       </div>
     </div>
   </div>
 
+  <!-- MAIN CONTENT -->
   <main class="container">
-    <section class="board-wrap">
-      <div id="plinkoBoard" class="plinko-board">
-        <!-- board is rendered by plinko.js -->
+
+    <!-- BALANCE BOX -->
+    <div class="form-card" style="text-align:center;margin-top:25px">
+      <h2>Your Balance</h2>
+      <p style="font-size:28px;color:var(--primary);text-shadow:0 0 15px var(--primary-glow)">
+        $<span id="balanceDisplay">0</span>
+      </p>
+      <p>Your Referral Code: <b id="refCodeBox"></b></p>
+
+      <button id="copyRefBtn" class="btn small" style="margin-top:10px">Copy Referral Link</button>
+
+      <div id="copyMsg" style="margin-top:4px;color:var(--primary);display:none">
+        ✓ Copied!
       </div>
-      <div class="payout-row" id="payoutRow">
-        <!-- example labels -->
-        <div>LOSE</div><div>$10</div><div>$20</div><div>$50</div><div>$100</div><div>$200</div><div>$500</div><div>$1000</div><div>JACKPOT</div>
-      </div>
-    </section>
+    </div>
 
-    <aside class="control-card">
-      <h3>Play</h3>
-      <label>Bet amount</label>
-      <input id="betAmount" type="number" min="1" step="1" value="20" />
-      <button id="dropBtn" class="btn">Drop Ball</button>
+    <!-- BET SETTINGS -->
+    <div class="form-card" style="margin-top:20px">
+      <h2>Set Bet</h2>
+      <input id="betInput" type="number" placeholder="Enter bet amount" class="field" style="padding:12px;width:100%">
+      <button id="dropBallBtn" class="btn" style="margin-top:12px">Drop Ball</button>
+    </div>
 
-      <div id="lastResult" class="small muted" style="margin-top:10px;"></div>
+    <!-- PLINKO BOARD -->
+    <div class="plinko-board" style="margin-top:35px;text-align:center">
+      <canvas id="plinkoCanvas" width="320" height="480" style="max-width:100%"></canvas>
+      <p style="margin-top:10px;color:var(--text-dim)">Watch the ball fall and try to hit the Jackpot!</p>
+    </div>
 
-      <hr />
-
-      <label>Referral link</label>
-      <div class="refRow">
-        <input id="refLink" readonly />
-        <button id="copyRef" class="btn small">Copy</button>
-      </div>
-
-      <button id="withdrawBtn" class="btn ghost" style="margin-top:12px">Withdraw</button>
-      <p class="muted small">Reach $2,000 cumulative wins to unlock JACKPOT ($4,000) and enable withdrawals.</p>
-    </aside>
   </main>
 
   <footer class="footer">© 2025 Plinko N.U</footer>
 
-  <!-- expose backend URL once (use this, do NOT redeclare elsewhere) -->
-  <script>
-    window.API_BASE = 'https://plinko-app.onrender.com';
-    window.FRONTEND_ORIGIN = 'https://plinko-app-nu.vercel.app';
-  </script>
-
-  <!-- small page behaviour script; plinko.js should handle the heavy stuff (calls to /api/play etc) -->
-  <script>
-    // Basic UI wiring (auto-login, VPN block, spinner helpers, copy referral)
-    (function(){
-      const spinner = id => document.getElementById(id);
-      function showSpinner(msg = 'Loading…'){ document.getElementById('globalSpinner').classList.remove('hidden'); document.getElementById('spinnerMsg').textContent = msg; }
-      function hideSpinner(){ document.getElementById('globalSpinner').classList.add('hidden'); }
-
-      // VPN block: if origin is present and not the frontend origin, allow; if using suspicious headers (not possible client-side reliably), show message.
-      // We'll detect if user is using a common mobile VPN by checking for proxy/resolver leak — this is necessarily heuristic.
-      function checkVPNandBlock(){
-        // Basic check: disallow if running inside an iframe or cross origin? (keep simple)
-        // If you want to block VPN strictly, handle on backend (preferred).
-        return false; // no client-side block; backend will reject via CORS if origin wrong
-      }
-
-      // Auto-login: if user object in localStorage — set UI
-      function setUserUI(u){
-        if(!u) {
-          document.getElementById('usernameTxt').textContent = 'Guest';
-          document.getElementById('userIdTxt').textContent = 'ID:';
-          document.getElementById('balanceVal').textContent = '$0';
-          return;
-        }
-        document.getElementById('usernameTxt').textContent = u.username || u.firstName || 'User';
-        document.getElementById('userIdTxt').textContent = 'ID: ' + (u.id || '');
-        document.getElementById('balanceVal').textContent = '$' + (u.balance || 0);
-        if(u.profileUrl) document.getElementById('avatarImg').src = u.profileUrl;
-        document.getElementById('refLink').value = (window.FRONTEND_ORIGIN || location.origin) + '/register.html?ref=' + (u.referralCode || '');
-      }
-
-      // localStorage helpers (same naming as your auth.js)
-      function saveUser(user){ localStorage.setItem('plinkoUser', JSON.stringify(user)); }
-      function getUser(){ return JSON.parse(localStorage.getItem('plinkoUser') || 'null'); }
-      function logout(){
-        localStorage.removeItem('plinkoUser');
-        location.href = 'login.html';
-      }
-
-      // events
-      document.getElementById('logoutBtn').addEventListener('click', logout);
-      document.getElementById('copyRef').addEventListener('click', ()=>{
-        const v = document.getElementById('refLink').value;
-        navigator.clipboard?.writeText(v).then(()=> {
-          document.getElementById('copyRef').textContent = 'Copied';
-          setTimeout(()=>document.getElementById('copyRef').textContent = 'Copy',1500);
-        });
-      });
-
-      // Play button -> call plinko.js handler
-      document.getElementById('dropBtn').addEventListener('click', async ()=>{
-        const bet = Number(document.getElementById('betAmount').value || 0);
-        if(!bet || bet <= 0) { alert('Enter a valid bet amount'); return; }
-        // plinko.js should expose window.dropBall(bet)
-        if(window.dropBall && typeof window.dropBall === 'function'){
-          showSpinner('Playing...');
-          try{ await window.dropBall(bet); }
-          catch(e){ console.error(e); alert('Play failed: '+(e.message||e)); }
-          finally { hideSpinner(); }
-        } else {
-          alert('Game engine not loaded.');
-        }
-      });
-
-      // withdraw button triggers withdraw flow (backend determines if allowed)
-      document.getElementById('withdrawBtn').addEventListener('click', async ()=>{
-        const u = getUser();
-        if(!u) { alert('Login first'); return; }
-        showSpinner('Requesting withdrawal...');
-        try{
-          const res = await fetch(window.API_BASE + '/api/withdraw', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: u.id, amount: u.balance })
-          });
-          const data = await res.json();
-          hideSpinner();
-          if(!data.ok) { alert('Withdraw request failed: ' + (data.error || JSON.stringify(data))); return; }
-          alert('Withdraw request submitted.');
-        }catch(err){ hideSpinner(); alert('Withdraw request failed: Server error'); }
-      });
-
-      // on load
-      document.addEventListener('DOMContentLoaded', ()=>{
-        setUserUI(getUser());
-      });
-
-      // Certificate modal handlers
-      document.getElementById('closeCert').addEventListener('click', ()=> document.getElementById('certModal').classList.add('hidden'));
-      document.getElementById('downloadCert').addEventListener('click', ()=>{
-        const canvas = document.getElementById('certCanvas');
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
-        link.download = 'Plinko-Jackpot-Certificate.png';
-        link.click();
-      });
-    })();
-  </script>
-
-  <!-- plinko engine (your file) -->
+  <!-- SCRIPTS -->
+  <script src="js/auth.js"></script>
   <script src="js/plinko.js"></script>
+
 </body>
 </html>
