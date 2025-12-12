@@ -1,52 +1,32 @@
 
-// frontend/js/login.js
+const API = "https://plinko-app.onrender.com";
 
-const API_BASE = "https://plinko-app.onrender.com";
-
-const form = document.getElementById("loginForm");
-
-if (!form) {
-  console.error("Login form not found");
-}
-
-form.addEventListener("submit", async (e) => {
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const identifier = document.getElementById("identifier").value.trim();
-  const password = document.getElementById("password").value;
-
-  if (!identifier || !password) {
-    alert("Enter username/email and password");
-    return;
-  }
+  const form = e.target;
+  const username = form.username.value.trim();
+  const password = form.password.value.trim();
 
   try {
-    const res = await fetch(`${API_BASE}/api/login`, {
+    const res = await fetch(`${API}/api/login`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ identifier, password }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+      credentials: "include"
     });
 
     const data = await res.json();
-    console.log("LOGIN RESPONSE:", data);
 
-    if (!res.ok) {
+    if (!data.ok) {
       alert(data.error || "Login failed");
       return;
     }
 
-    // ✅ Save token if backend sends one
-    if (data.token) {
-      localStorage.setItem("token", data.token);
-    }
-
-    // ✅ Redirect AFTER successful login
-    window.location.href = "plinko.html";
+    localStorage.setItem("plinkoUser", JSON.stringify(data.user));
+    location.href = "plinko.html";
 
   } catch (err) {
-    console.error(err);
-    alert("Network error — please try again.");
+    alert("Network error — please try again");
   }
 });
