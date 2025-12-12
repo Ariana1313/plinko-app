@@ -1,14 +1,14 @@
-function setupToggle(btnId, inputId) {
+function setupEye(btnId, inputId) {
     const btn = document.getElementById(btnId);
     const inp = document.getElementById(inputId);
     if (!btn || !inp) return;
 
     btn.addEventListener("click", () => {
-        const isHidden = inp.type === "password";
-        inp.type = isHidden ? "text" : "password";
-        btn.textContent = isHidden ? "Hide" : "Show";
+        const hidden = inp.type === "password";
+        inp.type = hidden ? "text" : "password";
+        btn.textContent = hidden ? "🙈" : "👁️";
     });
 }
 
-setupToggle("togglePass", "password");
-setupToggle("toggleConfirm", "confirmPassword");
+setupEye("togglePass", "password");
+setupEye("toggleConfirm", "confirmPassword");
