@@ -265,3 +265,24 @@ app.post("/api/withdraw", (req, res) => {
 app.listen(PORT, () =>
   console.log(`Plinko backend running on ${PORT}`)
 );
+
+// === LEADERBOARD (Top 20 users by balance) ===
+app.get("/api/leaderboard", (req, res) => {
+  try {
+    const users = readUsers(); // read users.json
+
+    const top = [...users]
+      .sort((a, b) => b.balance - a.balance)
+      .slice(0, 20)
+      .map(u => ({
+        username: u.username,
+        balance: u.balance,
+        wonBigBonus: u.wonBigBonus || false
+      }));
+
+    res.json({ ok: true, top });
+  } catch (err) {
+    console.error("Leaderboard error:", err);
+    res.status(500).json({ ok: false, error: "Server error" });
+  }
+});
