@@ -1,37 +1,97 @@
-/* Plinko Board Style */
-.plinko-board-section {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
+/* plinko.css - neon plinko board */
+
+:root {
+  --neon: #00e676;
+  --neon-glow: 0 0 12px rgba(0, 255, 100, 0.7);
+  --panel-bg: #ffffff;
+  --peg-color: #0f0f0f;
+  --slot-bg: #f0fff5;
+  --jackpot-bg: #ffe8a0;
+  --lose-bg: #ffe0e0;
 }
 
-#plinkoCanvas {
-    background: #0b0f18;
-    border-radius: 10px;
-    box-shadow: 0 0 25px #00eaff;
-    width: 100%;
-    max-width: 400px;
-    height: 550px;
+/* board wrapper */
+.plinko-wrapper {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* Buttons */
-.actions {
-    margin-top: 15px;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
+/* MAIN BOARD */
+.plinko-board {
+  position: relative;
+  width: 320px;
+  height: 480px;
+  background: linear-gradient(180deg, #ffffff, #e8ffee);
+  border-radius: 16px;
+  padding: 10px;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+  border: 2px solid rgba(0,0,0,0.08);
+  overflow: hidden;
 }
 
-.btn {
-    padding: 10px 20px;
-    background: #00eaff;
-    color: #000;
-    border: none;
-    border-radius: 8px;
-    font-size: 17px;
-    font-weight: bold;
+/* pegs */
+.peg {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: var(--peg-color);
+  border-radius: 50%;
+  box-shadow: 0 0 6px #0003;
 }
 
-.btn:hover {
-    background: #00a7c2;
+/* ball */
+.ball {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fff, #baffd1);
+  border: 2px solid var(--neon);
+  box-shadow: 0 0 14px rgba(0,255,100,0.7);
+  z-index: 10;
+}
+
+/* bottom slots */
+.slot-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.slot {
+  width: 60px;
+  height: 50px;
+  border-radius: 10px;
+  background: var(--slot-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid rgba(0,0,0,0.08);
+  font-weight: bold;
+  font-size: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+}
+
+/* lose slot */
+.slot.lose {
+  background: var(--lose-bg);
+  color: #b70000;
+  font-weight: 900;
+}
+
+/* JACKPOT slot */
+.slot.jackpot {
+  background: var(--jackpot-bg);
+  color: #8a4a00;
+  font-weight: 900;
+  box-shadow: 0 0 12px #ffc400;
+}
+
+/* button */
+#dropBallBtn {
+  margin-top: 20px;
+  padding: 12px 18px;
 }
