@@ -1,73 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-    <style>
-  .auth-wrapper {
-    margin-top: 40px; /* pulls everything upward */
-  }
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Account — PLINKO N.U</title>
 
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/plinko.css">
+<link rel="stylesheet" href="css/certificate.css">
+
+<style>
   .logo {
-    width: 80px;   /* perfect small logo */
+    width: 60px;
     height: auto;
   }
+  .auth-wrapper {
+    margin-top: 40px;
+  }
 </style>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account — PLINKO N.U</title>
-
-    <!-- styles -->
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/plinko.css">
-    <link rel="stylesheet" href="css/certificate.css">
 </head>
 
 <body class="neon-page">
-    <!-- HEADER -->
-    <header class="site-header">
-        <div class="left">
-            <img src="assets/blue-logo.png" class="logo">
-            <h1>PLINKO N.U</h1>
-        </div>
-        <nav class="right">
-            <a href="login.html" class="small-link">Login</a>
-        </nav>
-    </header>
 
-    <!-- REGISTER FORM -->
-    <main class="auth-wrapper glow-box">
-        <section class="form-card glow-box">
-            <h2>Create Account</h2>
-            <p class="subtitle">Get <strong>$150</strong> welcome bonus instantly.</p>
+<header class="site-header">
+  <div class="left">
+    <img src="assets/blue-logo.png" class="logo">
+    <h1>PLINKO N.U</h1>
+  </div>
+  <nav class="right">
+    <a href="login.html" class="small-link">Login</a>
+  </nav>
+</header>
 
-            <form id="registerForm" enctype="multipart/form-data">
+<main class="auth-wrapper">
+<section class="form-card glow-box">
 
-                <div class="field"><span class="icon">👤</span><input name="firstName" placeholder="First name"></div>
-                <div class="field"><span class="icon">👤</span><input name="lastName" placeholder="Last name"></div>
-                <div class="field"><span class="icon">🆔</span><input name="username" placeholder="Username"></div>
-                <div class="field"><span class="icon">📧</span><input name="email" placeholder="Email"></div>
+  <h2>Create Account</h2>
+  <p class="subtitle">Get <strong>$150</strong> welcome bonus instantly.</p>
 
-                <!-- password -->
-                <div class="field password-wrapper">
-                    <span class="icon">🔑</span>
-                    <input name="password" type="password" id="password" placeholder="Password">
-                    <button type="button" id="togglePass">Show</button>
-                </div>
+  <form id="registerForm" enctype="multipart/form-data">
 
-                <div class="field"><span class="icon">🔐</span><input name="pin" placeholder="4-digit secret PIN"></div>
-                <div class="field"><span class="icon">📱</span><input name="phone" placeholder="Phone"></div>
-                <div class="field"><span class="icon">🎂</span><input name="date" type="date"></div>
-                <div class="field"><span class="icon">🏠</span><input name="address" placeholder="Address"></div>
+    <div class="field"><span class="icon">👤</span>
+      <input name="firstName" placeholder="First name"></div>
 
-                <input class="ref" name="referral" placeholder="Referral code (optional)">
+    <div class="field"><span class="icon">👤</span>
+      <input name="lastName" placeholder="Last name"></div>
 
-                <button class="btn" type="submit">Create Account</button>
-            </form>
+    <div class="field"><span class="icon">🆔</span>
+      <input name="username" placeholder="Username"></div>
 
-            <p class="note">We’ll never share your details.</p>
-            <p class="note">© 2025 Plinko N.U</p>
-        </section>
-    </main>
+    <div class="field"><span class="icon">✉️</span>
+      <input name="email" placeholder="Email"></div>
 
-    <script src="register.js"></script>
+    <div class="field password-wrapper">
+      <span class="icon">🔑</span>
+      <input name="password" id="password" type="password" placeholder="Password">
+      <button type="button" id="togglePass">Show</button>
+    </div>
+
+    <div class="field"><span class="icon">🔒</span>
+      <input name="pin" maxlength="4" placeholder="4-digit secret PIN"></div>
+
+    <div class="field"><span class="icon">📱</span>
+      <input name="phone" placeholder="Phone"></div>
+
+    <div class="field"><span class="icon">🎂</span>
+      <input name="date" type="date"></div>
+
+    <div class="field"><span class="icon">🏠</span>
+      <input name="address" placeholder="Address"></div>
+
+    <input class="ref" name="referral" placeholder="Referral code (optional)">
+
+    <button class="btn" type="submit">Create Account</button>
+  </form>
+
+  <p class="note">We'll never share your details.</p>
+  <p class="note">© 2025 Plinko N.U</p>
+
+</section>
+</main>
+
+<script src="register.js"></script>
 </body>
 </html>
