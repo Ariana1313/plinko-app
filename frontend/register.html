@@ -1,33 +1,11 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Register — Plinko N.U</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    .pw-wrapper {
-      position: relative;
-      width: 100%;
-    }
-    .pw-toggle {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 18px;
-      cursor: pointer;
-      opacity: 0.7;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
-
-<script>
-  window.onerror = function(msg, url, line, col, error) {
-    alert("JS ERROR: " + msg + "\nLine: " + line);
-  };
-</script>
-
 <body class="neon-page">
   <header class="site-header">
     <div class="left">
@@ -39,6 +17,11 @@
     </nav>
   </header>
 
+  <!-- spinner (shared) -->
+  <div id="globalSpinner" class="hidden">
+    <div class="spinnerBox"><div class="spinner"></div><div id="spinnerMsg" class="msg">Loading…</div></div>
+  </div>
+
   <main class="container">
     <section class="form-card">
       <h2>Create account</h2>
@@ -46,24 +29,20 @@
 
       <form id="registerForm" enctype="multipart/form-data">
         <input type="hidden" name="referralCode" id="referralCode">
-
         <div class="field"><span class="icon">👤</span><input name="firstName" placeholder="First name" required /></div>
         <div class="field"><span class="icon">👥</span><input name="lastName" placeholder="Last name" /></div>
         <div class="field"><span class="icon">🆔</span><input name="username" placeholder="Username" required /></div>
         <div class="field"><span class="icon">✉️</span><input name="email" placeholder="Email" type="email" required /></div>
 
-        <!-- Password -->
-        <div class="field pw-wrapper">
+        <div class="field">
           <span class="icon">🔒</span>
-          <input name="password" id="password" placeholder="Password" type="password" required />
-          <span class="pw-toggle" onclick="togglePW('password', this)">👁️</span>
+          <input id="password" name="password" placeholder="Password" type="password" required />
         </div>
 
-        <!-- Confirm Password -->
-        <div class="field pw-wrapper">
+        <div class="field">
           <span class="icon">🔒</span>
-          <input name="confirmPassword" id="confirmPassword" placeholder="Confirm password" type="password" required />
-          <span class="pw-toggle" onclick="togglePW('confirmPassword', this)">👁️</span>
+          <input id="confirmPassword" placeholder="Confirm password" type="password" required />
+          <button type="button" id="togglePass" class="btn small ghost" style="position:absolute; right:12px; top:10px;">Show</button>
         </div>
 
         <div class="field"><span class="icon">🔐</span><input name="secretPin" placeholder="4-digit secret pin" maxlength="4" required /></div>
@@ -73,38 +52,66 @@
         <div class="field"><span class="icon">🖼️</span><input name="profilePic" type="file" accept="image/*" /></div>
 
         <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
-          <input id="referralCodeVisible" placeholder="Referral code (optional)" style="flex:1;padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.08)">
+          <input name="referralCode" id="referralCodeVisible" placeholder="Referral code (optional)" style="flex:1;padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.08)">
           <button class="btn" type="submit">Create Account</button>
         </div>
       </form>
 
-      <p class="small-note">We’ll never share your details.</p>
+      <p class="small-note">We’ll never share your details. This app is for fun.</p>
     </section>
   </main>
 
   <footer class="footer">© 2025 Plinko N.U</footer>
 
+  <!-- expose backend once -->
+  <script>window.API_BASE = 'https://plinko-app.onrender.com'; window.FRONTEND_ORIGIN = 'https://plinko-app-nu.vercel.app';</script>
+
+  <!-- small local script (validations, toggle pass) -->
   <script>
-    function togglePW(id, icon) {
-      const field = document.getElementById(id);
-      field.type = field.type === "password" ? "text" : "password";
-      icon.textContent = field.type === "password" ? "👁️" : "🙈";
+    // Toggle password visibility
+    document.getElementById('togglePass').addEventListener('click', function(){
+      const p = document.getElementById('password');
+      const cp = document.getElementById('confirmPassword');
+      const show = p.type === 'password';
+      p.type = show ? 'text' : 'password';
+      cp.type = show ? 'text' : 'password';
+      this.textContent = show ? 'Hide' : 'Show';
+    });
+
+    // autofill referral from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+    if(ref){
+      document.getElementById('referralCode').value = ref;
+      document.getElementById('referralCodeVisible').value = ref;
     }
 
-    // Validate password match before submitting
-    document.getElementById("registerForm").addEventListener("submit", function(e) {
-      const pw = document.getElementById("password").value;
-      const cpw = document.getElementById("confirmPassword").value;
-
-      if (pw !== cpw) {
-        e.preventDefault();
-        alert("Passwords do not match!");
-        return false;
+    // submit handler — uses window.API_BASE (do not redeclare API_BASE in external scripts)
+    document.getElementById('registerForm').addEventListener('submit', async function(e){
+      e.preventDefault();
+      const pass = document.getElementById('password').value;
+      const cpass = document.getElementById('confirmPassword').value;
+      if(pass !== cpass){ alert('Passwords do not match'); return; }
+      // show spinner
+      document.getElementById('globalSpinner').classList.remove('hidden');
+      const form = new FormData(this);
+      form.set('referralCode', document.getElementById('referralCodeVisible').value || '');
+      try {
+        const res = await fetch(window.API_BASE + '/api/register', { method:'POST', body: form });
+        const data = await res.json();
+        document.getElementById('globalSpinner').classList.add('hidden');
+        if(!data.ok){ alert(data.error || 'Registration failed'); return; }
+        // Save user locally (frontend expects this)
+        const user = data.user;
+        localStorage.setItem('plinkoUser', JSON.stringify(user));
+        alert('Account created and $150 bonus added! Redirecting to Plinko...');
+        location.href = 'plinko.html';
+      } catch(err) {
+        document.getElementById('globalSpinner').classList.add('hidden');
+        console.error(err);
+        alert('Network error — please try again.');
       }
     });
   </script>
-
-  <script src="js/auth.js"></script>
-  <script src="js/register.js"></script>
 </body>
 </html>
