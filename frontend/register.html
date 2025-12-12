@@ -1,99 +1,149 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <style>
-  body.neon-page {
-    background: linear-gradient(180deg,#04120a,#031210) !important;
-    color: #fff;
-  }
-</style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create Account — PLINKO N.U</title>
+<title>Create Account – PLINKO N.U</title>
 
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/plinko.css">
-<link rel="stylesheet" href="css/certificate.css">
 
 <style>
-  .logo {
-    width: 60px;
-    height: auto;
-  }
-  .auth-wrapper {
-    margin-top: 40px;
-  }
+/* Force same neon background as login */
+body.neon-page {
+    background: radial-gradient(circle at top, #02250f 0%, #000000 70%);
+    color: white;
+}
+
+/* Form card same as login */
+.form-card {
+    background: rgba(0,0,0,0.65);
+    border: 2px solid #00ff55;
+    border-radius: 25px;
+    padding: 35px;
+    width: 90%;
+    max-width: 420px;
+    margin: 0 auto;
+    box-shadow: 0 0 25px #00ff55;
+}
+
+/* Inputs same glowing style as login */
+.field input {
+    width: 100%;
+    padding: 15px 18px;
+    border-radius: 12px;
+    background: #0a0a0a;
+    border: 2px solid #00ff55;
+    color: #fff;
+}
+.field input:focus {
+    outline: none;
+    border-color: #00ff99;
+    box-shadow: 0 0 10px #00ff55;
+}
+
+/* Show/Hide buttons */
+.small-ghost {
+    position: absolute;
+    right: 15px;
+    top: 11px;
+    padding: 5px 10px;
+    background: #222;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* Fix header */
+.site-header {
+    padding: 20px;
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+/* Button style */
+.btn {
+    width: 100%;
+    padding: 15px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(90deg, #00ff55, #00cc44);
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
 </style>
+
 </head>
 
 <body class="neon-page">
 
 <header class="site-header">
-  <div class="left">
-    <img src="assets/blue-logo.png" class="logo">
-    <h1>PLINKO N.U</h1>
-  </div>
-  <nav class="right">
-    <a href="login.html" class="small-link">Login</a>
-  </nav>
+   PLINKO N.U
 </header>
 
 <main class="auth-wrapper">
-<section class="form-card glow-box">
+<section class="form-card">
 
-  <h2>Create Account</h2>
-  <p class="subtitle">Get <strong>$150</strong> welcome bonus instantly.</p>
+    <h2>Create Account</h2>
+    <p class="subtitle">Get <strong>$150</strong> welcome bonus instantly.</p>
 
-  <form id="registerForm" enctype="multipart/form-data">
+    <form id="registerForm">
 
-    <div class="field"><span class="icon">👤</span>
-      <input name="firstName" placeholder="First name"></div>
+        <div class="field">
+            <input type="text" name="firstName" placeholder="First name" required>
+        </div>
 
-    <div class="field"><span class="icon">👤</span>
-      <input name="lastName" placeholder="Last name"></div>
+        <div class="field">
+            <input type="text" name="lastName" placeholder="Last name" required>
+        </div>
 
-    <div class="field"><span class="icon">🆔</span>
-      <input name="username" placeholder="Username"></div>
+        <div class="field">
+            <input type="text" name="username" placeholder="Username" required>
+        </div>
 
-    <div class="field"><span class="icon">✉️</span>
-      <input name="email" placeholder="Email"></div>
+        <div class="field">
+            <input type="email" name="email" placeholder="Email" required>
+        </div>
 
-<!-- password -->
-<div class="field password-wrapper">
-  <span class="icon">🔑</span>
-  <input name="password" id="password" type="password" placeholder="Password" required>
-  <button type="button" id="togglePass" class="small-ghost">Show</button>
-</div>
+        <!-- Password -->
+        <div class="field password-wrapper" style="position:relative;">
+            <input type="password" id="password" name="password" placeholder="Password" required>
+            <button type="button" class="small-ghost" id="togglePass">Show</button>
+        </div>
 
-<!-- confirm password -->
-<div class="field password-wrapper">
-  <span class="icon">🔑</span>
-  <input name="confirmPassword" id="confirmPassword" type="password" placeholder="Confirm password" required>
-  <button type="button" id="toggleConfirm" class="small-ghost">Show</button>
-</div>
-    <div class="field"><span class="icon">🔒</span>
-      <input name="pin" maxlength="4" placeholder="4-digit secret PIN"></div>
+        <!-- Confirm Password -->
+        <div class="field password-wrapper" style="position:relative;">
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" required>
+            <button type="button" class="small-ghost" id="toggleConfirm">Show</button>
+        </div>
 
-    <div class="field"><span class="icon">📱</span>
-      <input name="phone" placeholder="Phone"></div>
+        <div class="field">
+            <input type="text" name="pin" placeholder="4-digit secret PIN" required>
+        </div>
 
-    <div class="field"><span class="icon">🎂</span>
-      <input name="date" type="date"></div>
+        <div class="field">
+            <input type="tel" name="phone" placeholder="Phone" required>
+        </div>
 
-    <div class="field"><span class="icon">🏠</span>
-      <input name="address" placeholder="Address"></div>
+        <div class="field">
+            <input type="text" name="address" placeholder="Address" required>
+        </div>
 
-    <input class="ref" name="referral" placeholder="Referral code (optional)">
+        <div class="field">
+            <input type="text" name="referral" placeholder="Referral code (optional)">
+        </div>
 
-    <button class="btn" type="submit">Create Account</button>
-  </form>
+        <button class="btn" type="submit">Create Account</button>
 
-  <p class="note">We'll never share your details.</p>
-  <p class="note">© 2025 Plinko N.U</p>
+    </form>
 
 </section>
 </main>
 
 <script src="register.js"></script>
+
 </body>
 </html>
