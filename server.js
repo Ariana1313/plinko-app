@@ -269,7 +269,7 @@ app.listen(PORT, () =>
 // === LEADERBOARD (Top 20 users by balance) ===
 app.get("/api/leaderboard", (req, res) => {
   try {
-    const users = read(USERS_FILE); // correct function
+    const users = read(USERS_FILE);  // ✅ correct function
 
     const top = [...users]
       .sort((a, b) => b.balance - a.balance)
@@ -277,7 +277,7 @@ app.get("/api/leaderboard", (req, res) => {
       .map(u => ({
         username: u.username,
         balance: u.balance,
-        wonBigBonus: u.wonBigBonus || false
+        wonBigBonus: u.hasWonJackpot || false
       }));
 
     res.json({ ok: true, top });
