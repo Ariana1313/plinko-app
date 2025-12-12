@@ -1,190 +1,175 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Login — PLINKO N.U</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Plinko N.U – Login</title>
 
-  <!-- main style -->
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="frontend/css/style.css" />
 
   <style>
-    /* Neon background */
     body.neon-page {
-      background: radial-gradient(circle at center, #001100, #000000);
+      background: radial-gradient(circle at top, #0a2f12, #000);
+      min-height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
       color: #fff;
-      font-family: "Poppins", sans-serif;
     }
 
-    /* Login card */
+    .site-header {
+      text-align: center;
+      padding: 30px 10px;
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    .auth-wrapper {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
     .form-card {
+      width: 100%;
       max-width: 420px;
-      background: rgba(0, 0, 0, 0.55);
-      backdrop-filter: blur(6px);
-      padding: 25px;
-      margin: 50px auto;
-      border-radius: 16px;
-      border: 1px solid #0f0;
-      box-shadow: 0 0 25px rgba(0,255,0,0.3);
+      background: rgba(0, 0, 0, 0.9);
+      border-radius: 18px;
+      padding: 30px 25px;
+      border: 2px solid rgba(0, 255, 0, 0.6);
+      box-shadow: 0 0 25px rgba(0, 255, 0, 0.4);
+    }
+
+    .form-card h2 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #ccc;
+      margin-bottom: 25px;
+      font-size: 14px;
     }
 
     .field {
-      margin-bottom: 18px;
+      position: relative;
+      margin-bottom: 15px;
+      background: #111;
+      border-radius: 10px;
+      padding: 12px;
+      border: 2px solid rgba(0, 255, 0, 0.5);
+      box-shadow: inset 0 0 8px rgba(0, 255, 0, 0.2);
     }
 
     .field input {
       width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      background: #011300;
-      border: 1px solid #0f0;
+      background: none;
+      border: none;
+      outline: none;
       color: #fff;
       font-size: 16px;
+    }
+
+    .toggle-eye {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #9aff9a;
+      font-size: 18px;
+      cursor: pointer;
     }
 
     .btn {
       width: 100%;
+      margin-top: 15px;
       padding: 14px;
-      margin-top: 10px;
-      border-radius: 12px;
-      border: none;
-      background: linear-gradient(to right, #00ff55, #00aa33);
       font-size: 18px;
       font-weight: bold;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(90deg, #00ff55, #00cc44);
       color: #000;
-      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.6);
     }
 
-    .small-link {
-      display: block;
-      margin-top: 10px;
+    .link {
       text-align: center;
-      color: #fff;
-      font-size: 14px;
+      margin-top: 15px;
     }
 
-    /* Password toggle */
-    .password-toggle {
-      position: absolute;
-      right: 14px;
-      top: 14px;
-      color: #0f0;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .field.password-wrapper {
-      position: relative;
-    }
-
-    /* Global loading spinner */
-    #globalSpinner {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 99999;
-    }
-
-    .spinnerBox {
-      text-align: center;
-      color: #fff;
-    }
-
-    .spinner {
-      width: 60px;
-      height: 60px;
-      border: 5px solid #0f0;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: auto;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    .link a {
+      color: #9aff9a;
+      text-decoration: underline;
     }
   </style>
 </head>
 
 <body class="neon-page">
 
-<header class="site-header">
-  <div class="left">
-    <img src="assets/logo-card.png" alt="logo" style="height:40px;">
-    <h1>PLINKO N.U</h1>
-  </div>
+  <header class="site-header">
+    PLINKO N.U  
+    <div class="link">
+      <a href="register.html">Register</a>
+    </div>
+  </header>
 
-  <nav class="right">
-    <a href="register.html" class="small-link">Register</a>
-  </nav>
-</header>
+  <main class="auth-wrapper">
+    <section class="form-card">
+      <h2>Login</h2>
+      <p class="subtitle">
+        Welcome back — your balance and bonuses will show after login.
+      </p>
 
-<main class="container">
+      <form id="loginForm">
 
-  <section class="form-card">
-    <h2>Login</h2>
-    <p class="subtitle">Welcome back — your balance and bonuses will show after login.</p>
+        <div class="field">
+          <input
+            type="text"
+            id="identifier"
+            name="identifier"
+            placeholder="Email or Username"
+            required
+          />
+        </div>
 
-    <form id="loginForm">
-      <!-- Email -->
-      <div class="field">
-        <input id="email" type="email" placeholder="Email" required>
+        <div class="field">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Password"
+            required
+          />
+          <button type="button" class="toggle-eye" id="togglePassword">👁</button>
+        </div>
+
+        <button type="submit" class="btn">Login</button>
+
+      </form>
+
+      <div class="link">
+        <a href="register.html">Create account</a>
       </div>
+    </section>
+  </main>
 
-      <!-- Password with reveal -->
-      <div class="field password-wrapper">
-        <input id="password" type="password" placeholder="Password" required>
-        <span id="togglePassword" class="password-toggle">👁️</span>
-      </div>
+  <script src="frontend/js/login.js"></script>
 
-      <!-- Submit -->
-      <button class="btn" type="submit">Login</button>
+  <script>
+    // Eye toggle (WORKING)
+    const toggle = document.getElementById("togglePassword");
+    const passInput = document.getElementById("password");
 
-      <a href="register.html" class="small-link">Create account</a>
-    </form>
-  </section>
-
-</main>
-
-<!-- Global loading overlay -->
-<div id="globalSpinner">
-  <div class="spinnerBox">
-    <div class="spinner"></div>
-    <div class="msg" id="spinnerMsg">Loading…</div>
-  </div>
-</div>
-
-<!-- Login JS -->
-<script src="js/login.js"></script>
-
-<!-- VPN blocker -->
-<script>
-(async () => {
-  try {
-    const res = await fetch("https://ipapi.co/json/");
-    const data = await res.json();
-
-    if (data.security && data.security.vpn === true) {
-      alert("⚠️ Please turn OFF VPN to use PLINKO N.U");
-      document.body.innerHTML =
-        "<h2 style='color:white;text-align:center;margin-top:40px;'>VPN Detected — Disable VPN and reload.</h2>";
-    }
-  } catch (e) {
-    console.log("VPN check failed", e);
-  }
-})();
-</script>
-
-<!-- Password toggle -->
-<script>
-document.getElementById("togglePassword").onclick = () => {
-  const input = document.getElementById("password");
-  input.type = input.type === "password" ? "text" : "password";
-};
-</script>
+    toggle.addEventListener("click", () => {
+      passInput.type = passInput.type === "password" ? "text" : "password";
+    });
+  </script>
 
 </body>
 </html>
