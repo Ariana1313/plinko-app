@@ -1,216 +1,60 @@
-/* ---------------------------------------------
-   GLOBAL STYLE — PREMIUM NEON GREEN GLOW THEME
-   --------------------------------------------- */
-
-:root {
-  --primary: #00ff7f;
-  --primary-glow: rgba(0, 255, 127, 0.6);
-  --bg-dark: #050505;
-  --bg-card: #0a0a0a;
-  --text: #e4ffe7;
-  --text-dim: #8affc3;
-  --danger: #ff4d4d;
+/* Global Neon Page Background */
+.neon-page {
+    background: linear-gradient(135deg, #06080f, #0e1a27);
+    color: #ffffff;
+    font-family: "Poppins", sans-serif;
+    min-height: 100vh;
 }
 
-body.neon-page {
-  background: radial-gradient(circle at center, #0b0f0c, #020402);
-  color: var(--text);
-  font-family: 'Poppins', sans-serif;
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-}
-
-/* ---------------------------------------------
-   HEADER
-   --------------------------------------------- */
-
+/* Header */
 .site-header {
-  width: 100%;
-  padding: 16px 20px;
-  background: #00000080;
-  backdrop-filter: blur(6px);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #00ff7f33;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.site-header img {
-  height: 36px;
+.site-header .left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.site-header h1 {
-  margin-left: 8px;
-  font-size: 20px;
-  color: var(--primary);
-  text-shadow: 0 0 10px var(--primary-glow);
+.top-logo {
+    width: 45px;
 }
 
-.site-header .right a {
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-/* ---------------------------------------------
-   FORM CARD
-   --------------------------------------------- */
-
-.form-card {
-  margin: 40px auto;
-  width: 92%;
-  max-width: 400px;
-  background: var(--bg-card);
-  padding: 24px;
-  border-radius: 14px;
-  box-shadow: 0 0 20px #00ff7f22;
-  border: 1px solid #00ff7f33;
-}
-
-.form-card h2 {
-  color: var(--primary);
-  text-shadow: 0 0 10px var(--primary-glow);
-}
-
-.field {
-  margin: 12px 0;
-}
-
-.field input {
-  width: 100%;
-  padding: 12px;
-  background: #000;
-  border: 1px solid #00ff7f44;
-  border-radius: 8px;
-  color: var(--text);
-}
-
-.field input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 12px var(--primary-glow);
-}
-
-/* ---------------------------------------------
-   BUTTONS
-   --------------------------------------------- */
-
-.btn {
-  width: 100%;
-  padding: 12px;
-  font-size: 16px;
-  background: var(--primary);
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  color: #000;
-  cursor: pointer;
-  box-shadow: 0 0 15px var(--primary-glow);
-}
-
-.btn:hover {
-  filter: brightness(1.1);
-}
-
-.btn.ghost {
-  background: transparent;
-  color: var(--primary);
-  border: 1px solid var(--primary);
-  box-shadow: none;
-}
-
-/* ---------------------------------------------
-   GLOBAL LOADING SPINNER
-   --------------------------------------------- */
-
+/* Spinner */
 #globalSpinner {
-  position: fixed;
-  inset: 0;
-  background: #000c;
-  backdrop-filter: blur(4px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
 }
 
 .spinnerBox {
-  text-align: center;
+    text-align: center;
 }
 
 .spinner {
-  width: 60px;
-  height: 60px;
-  border: 5px solid #003d28;
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.9s linear infinite;
+    width: 55px;
+    height: 55px;
+    border: 4px solid #00eaff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+    100% { transform: rotate(360deg); }
 }
 
 #spinnerMsg {
-  margin-top: 14px;
-  font-size: 18px;
-}
-
-/* ---------------------------------------------
-   CERTIFICATE MODAL
-   --------------------------------------------- */
-
-#certModal {
-  position: fixed;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: #000b;
-  z-index: 3000;
-}
-
-#certModal .card {
-  width: 92%;
-  max-width: 700px;
-  padding: 20px;
-  background: var(--bg-card);
-  border-radius: 14px;
-  border: 1px solid #00ff7f55;
-}
-
-.certCanvas {
-  width: 100%;
-  border-radius: 10px;
-  box-shadow: 0 0 25px var(--primary-glow);
-}
-
-/* ---------------------------------------------
-   PLINKO BOARD NEON GLOW (IMPORTANT)
-   --------------------------------------------- */
-
-.plinko-board {
-  margin-top: 20px;
-  filter: drop-shadow(0 0 15px var(--primary-glow));
-}
-
-/* Neon glow for balls */
-.plinko-ball {
-  box-shadow: 0 0 10px var(--primary-glow);
-}
-
-/* Neon glow for pegs */
-.plinko-peg {
-  box-shadow: 0 0 8px var(--primary-glow);
-}
-
-/* ---------------------------------------------
-   RESPONSIVE
-   --------------------------------------------- */
-
-@media (max-width: 500px) {
-  .form-card {
-    margin-top: 20px;
-  }
+    margin-top: 12px;
+    font-size: 18px;
+    color: #fff;
 }
