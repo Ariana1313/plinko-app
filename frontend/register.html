@@ -1,117 +1,98 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Register — Plinko N.U</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="css/style.css" />
+<meta charset="UTF-8" />
+<title>Create Account — PLINKO N.U</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body class="neon-page">
-  <header class="site-header">
+
+<header class="site-header">
     <div class="left">
-      <img src="assets/logo-card.png" alt="logo" class="logo-card">
-      <h1>Plinko N.U</h1>
+        <img src="assets/blue-logo.png" alt="Logo" class="logo-small">
+        <h1>PLINKO N.U</h1>
     </div>
-    <nav class="right">
-      <a href="login.html" class="small-link">Login</a>
-    </nav>
-  </header>
+</header>
 
-  <!-- spinner (shared) -->
-  <div id="globalSpinner" class="hidden">
-    <div class="spinnerBox"><div class="spinner"></div><div id="spinnerMsg" class="msg">Loading…</div></div>
-  </div>
+<main class="container">
 
-  <main class="container">
-    <section class="form-card">
-      <h2>Create account</h2>
-      <p class="subtitle">Get <strong>$150</strong> welcome bonus instantly. Use a 4-digit secret PIN to recover password.</p>
+<section class="form-card">
+    <h2>Create Account</h2>
+    <p class="subtitle">Get <b>$150</b> welcome bonus instantly.</p>
 
-      <form id="registerForm" enctype="multipart/form-data">
-        <input type="hidden" name="referralCode" id="referralCode">
-        <div class="field"><span class="icon">👤</span><input name="firstName" placeholder="First name" required /></div>
-        <div class="field"><span class="icon">👥</span><input name="lastName" placeholder="Last name" /></div>
-        <div class="field"><span class="icon">🆔</span><input name="username" placeholder="Username" required /></div>
-        <div class="field"><span class="icon">✉️</span><input name="email" placeholder="Email" type="email" required /></div>
+    <form id="registerForm">
 
         <div class="field">
-          <span class="icon">🔒</span>
-          <input id="password" name="password" placeholder="Password" type="password" required />
+            <span class="icon">👤</span>
+            <input type="text" id="firstName" placeholder="First name" required>
         </div>
 
         <div class="field">
-          <span class="icon">🔒</span>
-          <input id="confirmPassword" placeholder="Confirm password" type="password" required />
-          <button type="button" id="togglePass" class="btn small ghost" style="position:absolute; right:12px; top:10px;">Show</button>
+            <span class="icon">👤</span>
+            <input type="text" id="lastName" placeholder="Last name" required>
         </div>
 
-        <div class="field"><span class="icon">🔐</span><input name="secretPin" placeholder="4-digit secret pin" maxlength="4" required /></div>
-        <div class="field"><span class="icon">📞</span><input name="phone" placeholder="Phone" /></div>
-        <div class="field"><span class="icon">🎂</span><input name="birthday" placeholder="Birthday (YYYY-MM-DD)" /></div>
-        <div class="field"><span class="icon">🏠</span><input name="address" placeholder="Address" /></div>
-        <div class="field"><span class="icon">🖼️</span><input name="profilePic" type="file" accept="image/*" /></div>
-
-        <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
-          <input name="referralCode" id="referralCodeVisible" placeholder="Referral code (optional)" style="flex:1;padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.08)">
-          <button class="btn" type="submit">Create Account</button>
+        <div class="field">
+            <span class="icon">🪪</span>
+            <input type="text" id="username" placeholder="Username" required>
         </div>
-      </form>
 
-      <p class="small-note">We’ll never share your details. This app is for fun.</p>
-    </section>
-  </main>
+        <div class="field">
+            <span class="icon">📧</span>
+            <input type="email" id="email" placeholder="Email" required>
+        </div>
 
-  <footer class="footer">© 2025 Plinko N.U</footer>
+        <div class="field">
+            <span class="icon">🔒</span>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="button" id="togglePass" class="show-btn">Show</button>
+        </div>
 
-  <!-- expose backend once -->
-  <script>window.API_BASE = 'https://plinko-app.onrender.com'; window.FRONTEND_ORIGIN = 'https://plinko-app-nu.vercel.app';</script>
+        <div class="field">
+            <span class="icon">🔒</span>
+            <input type="password" id="confirmPassword" placeholder="Confirm password" required>
+        </div>
 
-  <!-- small local script (validations, toggle pass) -->
-  <script>
-    // Toggle password visibility
-    document.getElementById('togglePass').addEventListener('click', function(){
-      const p = document.getElementById('password');
-      const cp = document.getElementById('confirmPassword');
-      const show = p.type === 'password';
-      p.type = show ? 'text' : 'password';
-      cp.type = show ? 'text' : 'password';
-      this.textContent = show ? 'Hide' : 'Show';
-    });
+        <div class="field">
+            <span class="icon">🔐</span>
+            <input type="text" id="pin" placeholder="4-digit secret pin" maxlength="4" required>
+        </div>
 
-    // autofill referral from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get('ref');
-    if(ref){
-      document.getElementById('referralCode').value = ref;
-      document.getElementById('referralCodeVisible').value = ref;
-    }
+        <div class="field">
+            <span class="icon">📱</span>
+            <input type="text" id="phone" placeholder="Phone">
+        </div>
 
-    // submit handler — uses window.API_BASE (do not redeclare API_BASE in external scripts)
-    document.getElementById('registerForm').addEventListener('submit', async function(e){
-      e.preventDefault();
-      const pass = document.getElementById('password').value;
-      const cpass = document.getElementById('confirmPassword').value;
-      if(pass !== cpass){ alert('Passwords do not match'); return; }
-      // show spinner
-      document.getElementById('globalSpinner').classList.remove('hidden');
-      const form = new FormData(this);
-      form.set('referralCode', document.getElementById('referralCodeVisible').value || '');
-      try {
-        const res = await fetch(window.API_BASE + '/api/register', { method:'POST', body: form });
-        const data = await res.json();
-        document.getElementById('globalSpinner').classList.add('hidden');
-        if(!data.ok){ alert(data.error || 'Registration failed'); return; }
-        // Save user locally (frontend expects this)
-        const user = data.user;
-        localStorage.setItem('plinkoUser', JSON.stringify(user));
-        alert('Account created and $150 bonus added! Redirecting to Plinko...');
-        location.href = 'plinko.html';
-      } catch(err) {
-        document.getElementById('globalSpinner').classList.add('hidden');
-        console.error(err);
-        alert('Network error — please try again.');
-      }
-    });
-  </script>
+        <div class="field">
+            <span class="icon">🎂</span>
+            <input type="date" id="birthday">
+        </div>
+
+        <div class="field">
+            <span class="icon">🏠</span>
+            <input type="text" id="address" placeholder="Address">
+        </div>
+
+        <div class="field">
+            <span class="icon">🖼</span>
+            <input type="file" id="avatar">
+        </div>
+
+        <div class="field">
+            <input type="text" id="referral" placeholder="Referral code (optional)">
+        </div>
+
+        <button class="btn" type="submit">Create Account</button>
+    </form>
+
+    <p class="note">We'll never share your details.</p>
+</section>
+
+</main>
+
+<script src="js/register.js"></script>
+
 </body>
 </html>
