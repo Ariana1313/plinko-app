@@ -5,12 +5,29 @@
   <title>Register — Plinko N.U</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .pw-wrapper {
+      position: relative;
+      width: 100%;
+    }
+    .pw-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      cursor: pointer;
+      opacity: 0.7;
+    }
+  </style>
 </head>
-  <script>
+
+<script>
   window.onerror = function(msg, url, line, col, error) {
     alert("JS ERROR: " + msg + "\nLine: " + line);
   };
 </script>
+
 <body class="neon-page">
   <header class="site-header">
     <div class="left">
@@ -29,11 +46,26 @@
 
       <form id="registerForm" enctype="multipart/form-data">
         <input type="hidden" name="referralCode" id="referralCode">
+
         <div class="field"><span class="icon">👤</span><input name="firstName" placeholder="First name" required /></div>
         <div class="field"><span class="icon">👥</span><input name="lastName" placeholder="Last name" /></div>
         <div class="field"><span class="icon">🆔</span><input name="username" placeholder="Username" required /></div>
         <div class="field"><span class="icon">✉️</span><input name="email" placeholder="Email" type="email" required /></div>
-        <div class="field"><span class="icon">🔒</span><input name="password" placeholder="Password" type="password" required /></div>
+
+        <!-- Password -->
+        <div class="field pw-wrapper">
+          <span class="icon">🔒</span>
+          <input name="password" id="password" placeholder="Password" type="password" required />
+          <span class="pw-toggle" onclick="togglePW('password', this)">👁️</span>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="field pw-wrapper">
+          <span class="icon">🔒</span>
+          <input name="confirmPassword" id="confirmPassword" placeholder="Confirm password" type="password" required />
+          <span class="pw-toggle" onclick="togglePW('confirmPassword', this)">👁️</span>
+        </div>
+
         <div class="field"><span class="icon">🔐</span><input name="secretPin" placeholder="4-digit secret pin" maxlength="4" required /></div>
         <div class="field"><span class="icon">📞</span><input name="phone" placeholder="Phone" /></div>
         <div class="field"><span class="icon">🎂</span><input name="birthday" placeholder="Birthday (YYYY-MM-DD)" /></div>
@@ -45,11 +77,32 @@
           <button class="btn" type="submit">Create Account</button>
         </div>
       </form>
+
       <p class="small-note">We’ll never share your details.</p>
     </section>
   </main>
 
   <footer class="footer">© 2025 Plinko N.U</footer>
+
+  <script>
+    function togglePW(id, icon) {
+      const field = document.getElementById(id);
+      field.type = field.type === "password" ? "text" : "password";
+      icon.textContent = field.type === "password" ? "👁️" : "🙈";
+    }
+
+    // Validate password match before submitting
+    document.getElementById("registerForm").addEventListener("submit", function(e) {
+      const pw = document.getElementById("password").value;
+      const cpw = document.getElementById("confirmPassword").value;
+
+      if (pw !== cpw) {
+        e.preventDefault();
+        alert("Passwords do not match!");
+        return false;
+      }
+    });
+  </script>
 
   <script src="js/auth.js"></script>
   <script src="js/register.js"></script>
