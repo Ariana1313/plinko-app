@@ -144,6 +144,16 @@ body.neon-page {
 </main>
 
 <script src="register.js"></script>
+<script>
+document.getElementById("togglePass").onclick = function() {
+    let pass = document.getElementById("password");
+    pass.type = pass.type === "password" ? "text" : "password";
+};
 
+document.getElementById("toggleConfirm").onclick = function() {
+    let pass = document.getElementById("confirmPassword");
+    pass.type = pass.type === "password" ? "text" : "password";
+};
+</script>
 </body>
 </html>
