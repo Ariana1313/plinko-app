@@ -1,3 +1,10 @@
+
+/* Neon background (same as login page) */
+.neon-page {
+    min-height: 100vh;
+    background: radial-gradient(circle at center, #000000, #000000 40%, #001400 100%);
+    padding: 40px 0;
+}
 /* Center main container */
 .container {
   max-width: 480px;
@@ -5,18 +12,20 @@
   padding: 20px;
 }
 
-/* Card holding the registration form */
 .form-card {
-  width: 92%;
-  max-width: 420px;
-  margin: 40px auto;
-  padding: 25px 20px;
-  border-radius: 18px;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 255, 0, 0.3);
-  box-shadow: 0 0 25px rgba(0, 255, 0, 0.4);
-  color: #fff;
+    width: 92%;
+    max-width: 420px;
+    margin: 40px auto;
+    padding: 25px 20px;
+    border-radius: 18px;
+
+    /* NEW neon border + glow */
+    background: rgba(0, 0, 0, 0.85);
+    box-shadow: 0 0 20px #00ff55, 0 0 40px #00ff55 inset;
+    border: 1px solid #00ff55;
+
+    backdrop-filter: blur(8px);
+    color: #fff;
 }
 
 /* Title */
