@@ -301,3 +301,50 @@ body{
 @keyframes spin{
   to{transform:rotate(360deg)}
   }
+/* ===== Spinner overlay & modal (append to style.css) ===== */
+
+#globalSpinner {
+  position: fixed;
+  inset: 0;
+  display: none;
+  background: rgba(3,6,8,0.55);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+}
+
+#globalSpinner .spinnerBox {
+  background: rgba(6,10,12,0.85);
+  padding: 18px;
+  border-radius: 12px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  box-shadow:0 8px 30px rgba(0,0,0,0.6);
+}
+
+#globalSpinner .spinnerBox .spinner {
+  width:44px;height:44px;border-radius:50%;
+  border:5px solid rgba(255,255,255,0.06);
+  border-top-color:var(--accent);
+  animation:spin 0.9s linear infinite;
+}
+
+#globalSpinner .spinnerBox .msg {
+  color:#fff;font-weight:700;font-size:15px;
+}
+
+/* Certificate Modal */
+#certModal {
+  position:fixed; left:0; top:0; right:0; bottom:0;
+  display:none; align-items:center; justify-content:center; z-index:99998;
+  background: rgba(0,0,0,0.6);
+}
+#certModal .card {
+  width:92%; max-width:760px; background: #fff; color:#111; border-radius:12px; padding:18px; text-align:center;
+  box-shadow:0 8px 60px rgba(0,0,0,0.5);
+}
+#certModal .card h2{color:#045; margin-bottom:6px}
+#certModal .card .certCanvas { width:100%; border:1px dashed #ddd; margin:12px 0; }
+#certModal .card .actions { display:flex; gap:8px; justify-content:center; margin-top:12px; }
+#certModal .card .actions button { padding:10px 12px; border-radius:8px; }
