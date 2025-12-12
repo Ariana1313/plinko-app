@@ -70,7 +70,10 @@
 .btn:hover {
   background: #005fcc;
 }
-
+.logo {
+  width: 50px;
+  height: auto;
+}
 /* subtitle + note */
 .subtitle, .note {
   color: #ddd;
