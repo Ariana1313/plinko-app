@@ -269,7 +269,7 @@ app.listen(PORT, () =>
 // === LEADERBOARD (Top 20 users by balance) ===
 app.get("/api/leaderboard", (req, res) => {
   try {
-    const users = readUsers(); // read users.json
+    const users = read(USERS_FILE); // correct function
 
     const top = [...users]
       .sort((a, b) => b.balance - a.balance)
