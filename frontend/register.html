@@ -131,7 +131,9 @@ body.neon-page {
         <div class="field">
             <input type="text" name="address" placeholder="Address" required>
         </div>
-
+<div class="field">
+  <input type="file" name="avatar" accept="image/*">
+</div>
         <div class="field">
             <input type="text" name="referral" placeholder="Referral code (optional)">
         </div>
@@ -142,8 +144,7 @@ body.neon-page {
 
 </section>
 </main>
-
-<script src="register.js"></script>
+<script src="js/register.js"></script>
 <script>
 document.getElementById("togglePass").onclick = function() {
     let pass = document.getElementById("password");
