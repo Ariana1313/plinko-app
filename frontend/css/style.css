@@ -1,60 +1,74 @@
-/* Global Neon Page Background */
-.neon-page {
-    background: linear-gradient(135deg, #06080f, #0e1a27);
-    color: #ffffff;
-    font-family: "Poppins", sans-serif;
-    min-height: 100vh;
+/* Center main container */
+.container {
+  max-width: 480px;
+  margin: 40px auto;
+  padding: 20px;
 }
 
-/* Header */
-.site-header {
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Card holding the registration form */
+.form-card {
+  background: rgba(0,0,0,0.65);
+  padding: 25px;
+  border-radius: 12px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
 }
 
-.site-header .left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+/* Title */
+.form-card h2 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #fff;
 }
 
-.top-logo {
-    width: 45px;
+/* Input fields */
+.field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
 }
 
-/* Spinner */
-#globalSpinner {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.65);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 99999;
+.field input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 15px;
 }
 
-.spinnerBox {
-    text-align: center;
+/* Show password button */
+.show-btn {
+  background: none;
+  border: none;
+  color: #00bfff;
+  font-size: 14px;
 }
 
-.spinner {
-    width: 55px;
-    height: 55px;
-    border: 4px solid #00eaff;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+/* Submit button */
+.btn {
+  width: 100%;
+  padding: 12px;
+  background: #007bff;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 17px;
+  margin-top: 10px;
+  cursor: pointer;
 }
 
-@keyframes spin {
-    100% { transform: rotate(360deg); }
+.btn:hover {
+  background: #005fcc;
 }
 
-#spinnerMsg {
-    margin-top: 12px;
-    font-size: 18px;
-    color: #fff;
+/* subtitle + note */
+.subtitle, .note {
+  color: #ddd;
+  text-align: center;
+  margin-bottom: 10px;
 }
