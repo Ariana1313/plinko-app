@@ -21,7 +21,11 @@ form.addEventListener("submit", async (e) => {
       return;
     }
 
-    window.location.href = "plinko.html";
+    // save login state
+localStorage.setItem("plinko_logged_in", "true");
+
+// redirect
+window.location.href = "plinko.html";
 
   } catch (err) {
     alert("Network error. Please try again.");
