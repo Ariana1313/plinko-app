@@ -27,3 +27,13 @@ form.addEventListener("submit", async (e) => {
     alert("Network error. Please try again.");
   }
 });
+
+const loginToggle = document.getElementById("loginToggle");
+const loginPassword = document.getElementById("loginPassword");
+
+if (loginToggle && loginPassword) {
+  loginToggle.addEventListener("click", () => {
+    loginPassword.type =
+      loginPassword.type === "password" ? "text" : "password";
+  });
+}
