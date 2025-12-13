@@ -230,3 +230,21 @@
   opacity: 0.85;
   text-align: center;
 }
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper .eye {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  opacity: 0.7;
+}
+
+.password-wrapper .eye:active {
+  opacity: 1;
+}
