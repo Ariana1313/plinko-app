@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+  if (localStorage.getItem("plinko_logged_in") !== "true") {
+    window.location.replace("login.html");
+  }
+</script>
   <meta charset="UTF-8" />
   <title>Login — Plinko N.U</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
