@@ -1,32 +1,29 @@
 
-const API = "https://plinko-app.onrender.com";
+const API_BASE = "https://plinko-app.onrender.com";
 
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
+const form = document.getElementById("loginForm");
+
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const form = e.target;
-  const username = form.username.value.trim();
-  const password = form.password.value.trim();
+  const formData = new FormData(form);
 
   try {
-    const res = await fetch(`${API}/api/login`, {
+    const res = await fetch(`${API_BASE}/api/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-      credentials: "include"
+      body: formData
     });
 
     const data = await res.json();
 
-    if (!data.ok) {
+    if (!res.ok || !data.ok) {
       alert(data.error || "Login failed");
       return;
     }
 
-    localStorage.setItem("plinkoUser", JSON.stringify(data.user));
-    location.href = "plinko.html";
+    window.location.href = "plinko.html";
 
   } catch (err) {
-    alert("Network error — please try again");
+    alert("Network error. Please try again.");
   }
 });
