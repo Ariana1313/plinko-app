@@ -37,15 +37,16 @@
           />
         </div>
 
-        <div class="field">
-          <label class="icon">🔒</label>
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            required
-          />
-        </div>
+        <div class="field password-wrapper">
+  <input
+    type="password"
+    id="loginPassword"
+    name="password"
+    placeholder="Password"
+    required
+  >
+  <span class="eye" id="loginToggle">👁</span>
+</div>
 
         <div style="display:flex;gap:10px;margin-top:10px">
           <button class="btn" type="submit">Login</button>
