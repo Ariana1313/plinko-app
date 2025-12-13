@@ -9,7 +9,13 @@
 </head>
 
 <body class="neon-page">
+<script>
+  const token = localStorage.getItem("token");
 
+  if (!token) {
+    window.location.href = "login.html";
+  }
+</script>
   <header class="site-header">
     <img src="assets/logo-card.png" class="logo-card" alt="Plinko Logo">
     <h1>PLINKO N.U</h1>
