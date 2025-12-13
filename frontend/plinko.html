@@ -1,100 +1,50 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Plinko — Play & Win</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <title>Login — Plinko N.U</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Main global styles -->
   <link rel="stylesheet" href="css/style.css">
-
-  <!-- Plinko board styling -->
-  <link rel="stylesheet" href="css/plinko.css">
-
 </head>
+
 <body class="neon-page">
 
-  <!-- HEADER -->
   <header class="site-header">
-    <div class="left">
-      <img src="assets/logo-card.png" class="logo-card" alt="logo">
-      <h1>Plinko N.U</h1>
-    </div>
-    <div class="right" id="headerUserBox">
-      <!-- Loaded by JS -->
-    </div>
+    <img src="assets/logo-card.png" class="logo-card" alt="Plinko Logo">
+    <h1>PLINKO N.U</h1>
   </header>
 
-  <!-- GLOBAL SPINNER -->
-  <div id="globalSpinner">
-    <div class="spinnerBox">
-      <div class="spinner"></div>
-      <div class="msg" id="spinnerMsg">Loading…</div>
-    </div>
-  </div>
+  <main class="container auth-wrapper">
 
-  <!-- CERTIFICATE MODAL (Jackpot) -->
-  <div id="certModal">
-    <div class="card">
-      <h2>Congratulations — You Won JACKPOT!</h2>
-      <canvas id="certCanvas" class="certCanvas" width="1200" height="675"></canvas>
-      <div class="actions">
-        <button id="downloadCert" class="btn">Download Certificate</button>
-        <button id="closeCert" class="btn ghost">Close</button>
-      </div>
-    </div>
-  </div>
+    <section class="form-card">
+      <h2>Login</h2>
+      <p class="subtitle">Login to continue and play Plinko</p>
 
-  <main class="container">
+      <form id="loginForm">
 
-    <!-- USER DASH -->
-    <section class="user-panel">
-      <div class="balance-box">
-        <h3>Your Balance</h3>
-        <div id="userBalance">$0</div>
-      </div>
+        <div class="field">
+          <input type="text" name="identifier" placeholder="Username or Email" required>
+        </div>
 
-      <div class="ref-box">
-        <h3>Your Referral</h3>
-        <p id="refText">Loading…</p>
-        <button id="copyRef" class="btn small">Copy Link</button>
-      </div>
+        <div class="field">
+          <input type="password" name="password" placeholder="Password" required>
+        </div>
+
+        <button type="submit" class="btn">Login</button>
+
+        <p class="note">
+          Don’t have an account?
+          <a href="register.html">Register</a>
+        </p>
+
+      </form>
     </section>
-
-    <!-- BETTING AREA -->
-    <section class="bet-box">
-      <h3>Place Your Bet</h3>
-      <input type="number" id="betAmount" placeholder="Enter bet (min $10)" value="20">
-      <button id="dropBallBtn" class="btn">DROP BALL</button>
-    </section>
-
-    <!-- PLINKO GAME BOARD -->
-    <div class="plinko-wrapper">
-
-      <div class="plinko-board" id="plinkoBoard">
-        <!-- Pegs + Ball loaded by JS -->
-      </div>
-
-      <!-- SLOT ROW -->
-      <div class="slot-row">
-        <div class="slot lose">LOSE</div>
-        <div class="slot">$100</div>
-        <div class="slot">$150</div>
-        <div class="slot">$200</div>
-        <div class="slot jackpot">JACKPOT</div>
-      </div>
-    </div>
-
-    <!-- MESSAGE POPUP -->
-    <div id="msgPopup" class="popup"></div>
 
   </main>
 
   <footer class="footer">© 2025 Plinko N.U</footer>
 
-  <!-- JS -->
-  <script src="js/auth.js"></script>
-  <script src="js/plinko.js"></script>
-
+  <script src="js/login.js"></script>
 </body>
 </html>
